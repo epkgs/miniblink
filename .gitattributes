@@ -1,0 +1,2 @@
+devtools/front_end/**/* linguist-vendored=true
+*.go linguist-vendored=false

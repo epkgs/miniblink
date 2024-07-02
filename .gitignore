@@ -1,0 +1,11 @@
+go.sum
+go.work.sum
+LocalStorage
+cookie.dat
+cookies.dat
+vendor
+__debug_bin*.exe
+/*.exe
+*.syso
+/.idea
+/*.pdf
