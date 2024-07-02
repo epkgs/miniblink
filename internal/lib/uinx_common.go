@@ -10,3 +10,7 @@ import (
 func loadLibrary(libfile string) (handle uintptr, err error) {
 	return purego.Dlopen(libfile, purego.RTLD_NOW|purego.RTLD_GLOBAL)
 }
+
+func release(handle uintptr) (err error) {
+	return purego.Dlclose(handle)
+}

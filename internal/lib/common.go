@@ -56,22 +56,30 @@ func (lf *LazyFunc[F]) LoadOnce() {
 // LoadEmbedLibrary 函数用于加载嵌入的静态链接库文件
 // 如果加载成功，则返回nil；否则返回错误信息
 func LoadEmbedLibrary() (uintptr, error) {
-	releaseFile, err := releaseLibFile()
+	targetFile, err := generateLibFile()
 	if err != nil {
 		return 0, err
 	}
 	// 加载释放后的静态链接库文件
-	return loadLibrary(releaseFile)
+	return loadLibrary(targetFile)
 }
 
-func releaseLibFile() (string, error) {
+func Release() (err error) {
+	if HMODULE != 0 {
+		return release(HMODULE)
+	}
+
+	return nil
+}
+
+func generateLibFile() (string, error) {
 
 	tmpDir := filepath.Join(os.TempDir(), "miniblink")
-	releaseFile := filepath.Join(tmpDir, FILE_NAME)
+	targetFile := filepath.Join(tmpDir, FILE_NAME)
 
 	// 检查是否已有释放的 DLL
-	if _, err := os.Stat(releaseFile); err == nil {
-		return releaseFile, nil
+	if _, err := os.Stat(targetFile); err == nil {
+		return targetFile, nil
 	}
 
 	// 创建临时文件夹
@@ -86,7 +94,7 @@ func releaseLibFile() (string, error) {
 	}
 
 	// 创建dll文件
-	newFile, err := os.Create(releaseFile)
+	newFile, err := os.Create(targetFile)
 	if err != nil {
 		return "", errors.New("无法创建静态链接库文件，err: " + err.Error())
 	}
@@ -97,8 +105,8 @@ func releaseLibFile() (string, error) {
 		return "", errors.New("写入dll文件失败，err: " + err.Error())
 	}
 	if n != len(data) {
-		return releaseFile, errors.New("写入校验失败")
+		return targetFile, errors.New("写入校验失败")
 	}
 
-	return releaseFile, nil
+	return targetFile, nil
 }
