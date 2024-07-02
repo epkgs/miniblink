@@ -3,7 +3,7 @@
 ## 简介
 
 - 纯GO实现的MINIBLINK接口绑定，无须CGO
-- 内嵌miniblink，可指定版本，如：`go build -tags 'v108' .` 支持一下版本：
+- 内嵌miniblink，可指定版本，如：`go build -tags 'v108' .` 支持以下版本：
   - v4975
   - v108
 
