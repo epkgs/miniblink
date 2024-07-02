@@ -373,6 +373,9 @@ type WebsocketHookCallbacks interface {
 
 //////////////////////////////////////////////////////////////////////////
 
+// JsType 是枚举类型的别名
+type JsType int
+
 // JsType 枚举对应的Go常量
 const (
 	JsTypeNumber JsType = iota
@@ -386,14 +389,8 @@ const (
 	JsTypeV8Value
 )
 
-// JsType 是枚举类型的别名
-type JsType int
-
-// 由于Go没有直接的int64_t类型，但int64与int64_t兼容
-type int64_t int64
-
-// JsValue 是int64_t的别名
-type JsValue int64_t
+// JsValue 是int64的别名
+type JsValue uintptr
 
 // JsExecState 是void*的别名，在Go中通常使用unsafe.Pointer来表示
 type JsExecState uintptr

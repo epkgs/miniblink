@@ -60,23 +60,23 @@ type JsExecState uintptr
 type JsValue uintptr
 
 // _tagWkeWebView 结构体定义
-type _tagWkeWebView struct{}
-type WebView *_tagWkeWebView
+// type _tagWkeWebView struct{}
+type WebView uintptr
 
 // _tagWkeString 结构体定义
-type _tagWkeString struct{}
-type String *_tagWkeString // 假设为unsafe.Pointer
+// type _tagWkeString struct{}
+type String uintptr
 
-type _tagWkeMediaPlayer struct{}
-type MediaPlayer _tagWkeMediaPlayer
+// type _tagWkeMediaPlayer struct{}
+type MediaPlayer uintptr
 
 // wkeMediaPlayerClient
-type _tagWkeMediaPlayerClient struct{}
-type MediaPlayerClient *_tagWkeMediaPlayerClient
+// type _tagWkeMediaPlayerClient struct{}
+type MediaPlayerClient uintptr
 
 // blinkWebURLRequestPtr
-type _tabblinkWebURLRequestPtr struct{}
-type blinkWebURLRequestPtr *_tabblinkWebURLRequestPtr
+// type _tabblinkWebURLRequestPtr struct{}
+type blinkWebURLRequestPtr uintptr
 
 // 枚举类型通常使用int来表示
 type ProxyType int
