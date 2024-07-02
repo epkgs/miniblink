@@ -1,9 +1,5 @@
 package mb
 
-import (
-	"unsafe"
-)
-
 // Rect 对应 C++ 中的 _Rect 结构体
 type Rect struct {
 	X, Y, W, H int
@@ -98,14 +94,14 @@ const (
 
 // mbOnBlinkThreadInitCallback 对应的Go函数签名
 // 注意：Go没有直接的函数指针类型别名，但我们可以定义函数类型
-type OnBlinkThreadInitCallback func(param unsafe.Pointer) (anyRes uintptr)
+type OnBlinkThreadInitCallback func(param uintptr) (anyRes uintptr)
 
 // mbSettings 对应 C++ 中的 _mbSettings 结构体
 type Settings struct {
 	Proxy                        Proxy
 	Mask                         uint
 	BlinkThreadInitCallback      OnBlinkThreadInitCallback
-	BlinkThreadInitCallbackParam unsafe.Pointer // 使用unsafe.Pointer来存储任意类型的指针
+	BlinkThreadInitCallbackParam uintptr // 使用unsafe.Pointer来存储任意类型的指针
 	Version                      uintptr
 	MainDllPath                  *uint16 // 假设使用uint16的指针来表示宽字符字符串（通常使用syscall.UTF16PtrFromString转换）
 	MainDllHandle                Handle
@@ -247,8 +243,8 @@ type StringPtr *String
 // MemBuf 对应C中的_MemBuf结构体
 type MemBuf struct {
 	Size   int
-	Data   unsafe.Pointer // 使用unsafe.Pointer来表示void*
-	Length uintptr        // uintptr在Go中通常对应uintptr或uint，具体取决于你的平台和编译器
+	Data   uintptr // 使用unsafe.Pointer来表示void*
+	Length uintptr // uintptr在Go中通常对应uintptr或uint，具体取决于你的平台和编译器
 }
 
 // mbStorageType 枚举
@@ -357,14 +353,14 @@ const (
 )
 
 // typedef void* WebSocketChannel;
-type WebSocketChannel unsafe.Pointer
+type WebSocketChannel uintptr
 
 // 回调函数签名
-type OnWillConnectCallback func(webView WebView, param unsafe.Pointer, channel WebSocketChannel, url string) (StringPtr, bool)
-type OnConnectedCallback func(webView WebView, param unsafe.Pointer, channel WebSocketChannel) bool
-type OnReceiveCallback func(webView WebView, param unsafe.Pointer, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
-type OnSendCallback func(webView WebView, param unsafe.Pointer, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
-type OnErrorCallback func(webView WebView, param unsafe.Pointer, channel WebSocketChannel)
+type OnWillConnectCallback func(webView WebView, param uintptr, channel WebSocketChannel, url string) (StringPtr, bool)
+type OnConnectedCallback func(webView WebView, param uintptr, channel WebSocketChannel) bool
+type OnReceiveCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
+type OnSendCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
+type OnErrorCallback func(webView WebView, param uintptr, channel WebSocketChannel)
 
 // 回调接口定义
 type WebsocketHookCallbacks interface {
@@ -400,78 +396,78 @@ type int64_t int64
 type JsValue int64_t
 
 // JsExecState 是void*的别名，在Go中通常使用unsafe.Pointer来表示
-type JsExecState unsafe.Pointer
+type JsExecState uintptr
 
 // OnGetPdfPageDataCallback 对应C中的回调函数类型
-type OnGetPdfPageDataCallback func(webView WebView, param unsafe.Pointer, data unsafe.Pointer, size uintptr)
+type OnGetPdfPageDataCallback func(webView WebView, param uintptr, data uintptr, size uintptr)
 
 // RunJsCallback 对应C中的回调函数类型
-type RunJsCallback func(webView WebView, param unsafe.Pointer, es JsExecState, v JsValue)
+type RunJsCallback func(webView WebView, param uintptr, es JsExecState, v JsValue)
 
 // JsQueryCallback 对应C中的回调函数类型
-type JsQueryCallback func(webView WebView, param unsafe.Pointer, es JsExecState, queryId int64, customMsg int, request string)
+type JsQueryCallback func(webView WebView, param uintptr, es JsExecState, queryId int64, customMsg int, request string)
 
 // mbTitleChangedCallback
-type TitleChangedCallback func(webView WebView, param unsafe.Pointer, title string)
+type TitleChangedCallback func(webView WebView, param uintptr, title string)
 
 // mbMouseOverUrlChangedCallback
-type MouseOverUrlChangedCallback func(webView WebView, param unsafe.Pointer, url string)
+type MouseOverUrlChangedCallback func(webView WebView, param uintptr, url string)
 
 // mbURLChangedCallback
-type URLChangedCallback func(webView WebView, param unsafe.Pointer, url string, canGoBack bool, canGoForward bool)
+type URLChangedCallback func(webView WebView, param uintptr, url string, canGoBack bool, canGoForward bool)
 
 // mbURLChangedCallback2
-type URLChangedCallback2Callback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, url string)
+type URLChangedCallback2Callback func(webView WebView, param uintptr, frameId WebFrameHandle, url string)
 
 // PaintUpdatedCallback
 // 注意：HDC是Windows特有的类型，这里假设它已经作为uintptr类型定义
 type HDC uintptr
-type PaintUpdatedCallback func(webView WebView, param unsafe.Pointer, hdc HDC, x, y, cx, cy int)
+type PaintUpdatedCallback func(webView WebView, param uintptr, hdc HDC, x, y, cx, cy int)
 
 // AcceleratedPaintCallback
-type AcceleratedPaintCallback func(webView WebView, param unsafe.Pointer, typ int, dirytRects *Rect, dirytRectsSize uintptr, sharedHandle unsafe.Pointer)
+type AcceleratedPaintCallback func(webView WebView, param uintptr, typ int, dirytRects *Rect, dirytRectsSize uintptr, sharedHandle uintptr)
 
 // PaintBitUpdatedCallback
-type PaintBitUpdatedCallback func(webView WebView, param unsafe.Pointer, buffer unsafe.Pointer, r *Rect, width, height int)
+type PaintBitUpdatedCallback func(webView WebView, param uintptr, buffer uintptr, r *Rect, width, height int)
 
 // mbAlertBoxCallback
-type AlertBoxCallback func(webView WebView, param unsafe.Pointer, msg string)
+type AlertBoxCallback func(webView WebView, param uintptr, msg string)
 
 // mbConfirmBoxCallback
-type ConfirmBoxCallback func(webView WebView, param unsafe.Pointer, msg string) bool
+type ConfirmBoxCallback func(webView WebView, param uintptr, msg string) bool
 
 // mbPromptBoxCallback
-type PromptBoxCallback func(webView WebView, param unsafe.Pointer, msg, defaultResult string) StringPtr
+type PromptBoxCallback func(webView WebView, param uintptr, msg, defaultResult string) StringPtr
 
 // NavigationCallback
-type NavigationCallback func(webView WebView, param unsafe.Pointer, navigationType NavigationType, url string) bool
+type NavigationCallback func(webView WebView, param uintptr, navigationType NavigationType, url string) bool
 
 // CreateViewCallback
-type CreateViewCallback func(webView WebView, param unsafe.Pointer, navigationType NavigationType, url string, windowFeatures *WindowFeatures) WebView
+type CreateViewCallback func(webView WebView, param uintptr, navigationType NavigationType, url string, windowFeatures *WindowFeatures) WebView
 
 // DocumentReadyCallback
-type DocumentReadyCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle)
+type DocumentReadyCallback func(webView WebView, param uintptr, frameId WebFrameHandle)
 
 // mbCloseCallback
-type CloseCallback func(webView WebView, param unsafe.Pointer, unuse unsafe.Pointer) bool
+type CloseCallback func(webView WebView, param uintptr, unuse uintptr) bool
 
 // mbDestroyCallback
-type DestroyCallback func(webView WebView, param unsafe.Pointer, unuse unsafe.Pointer) bool
+type DestroyCallback func(webView WebView, param uintptr, unuse uintptr) bool
 
 // mbOnShowDevtoolsCallback
-type OnShowDevtoolsCallback func(webView WebView, param unsafe.Pointer)
+type OnShowDevtoolsCallback func(webView WebView, param uintptr)
 
 // mbDidCreateScriptContextCallback
-type DidCreateScriptContextCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, context unsafe.Pointer, extensionGroup, worldId int)
+type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int)
 
 // mbGetPluginListCallback
-type GetPluginListCallback func(refresh bool, pluginListBuilder, param unsafe.Pointer) bool
+type GetPluginListCallback func(refresh bool, pluginListBuilder, param uintptr) bool
 
 // NetResponseCallback
-type NetResponseCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob) bool
+type NetResponseCallback func(webView WebView, param uintptr, url string, job NetJob) bool
 
 // ThreadCallback
-type ThreadCallback func(param1, param2 unsafe.Pointer)
+type ThreadCallback func(param1, param2 uintptr)
 
 // NodeOnCreateProcessCallback
 type WCHAR uint16
@@ -503,7 +499,7 @@ type STARTUPINFOW struct {
 	HStdOutput      Handle
 	HStdError       Handle
 }
-type NodeOnCreateProcessCallback func(webView WebView, param unsafe.Pointer, applicationPath, arguments *WCHAR, startup *STARTUPINFOW)
+type NodeOnCreateProcessCallback func(webView WebView, param uintptr, applicationPath, arguments *WCHAR, startup *STARTUPINFOW)
 
 // mbLoadingResult 是一个表示加载结果的类型
 type LoadingResult int
@@ -516,10 +512,10 @@ const (
 )
 
 // mbLoadingFinishCallback
-type LoadingFinishCallback func(webView WebView, param unsafe.Pointer, FrameId WebFrameHandle, URL string, Result LoadingResult, FailedReason string)
+type LoadingFinishCallback func(webView WebView, param uintptr, FrameId WebFrameHandle, URL string, Result LoadingResult, FailedReason string)
 
 // mbDownloadCallback
-type DownloadCallback func(webView WebView, param unsafe.Pointer, FrameId WebFrameHandle, URL string, DownloadJob unsafe.Pointer) bool
+type DownloadCallback func(webView WebView, param uintptr, FrameId WebFrameHandle, URL string, DownloadJob uintptr) bool
 
 // mbConsoleLevel 枚举
 type ConsoleLevel int
@@ -535,43 +531,43 @@ const (
 )
 
 // mbConsoleCallback
-type ConsoleCallback func(webView WebView, param unsafe.Pointer, level ConsoleLevel, message string, sourceName string, sourceLine uint, stackTrace string)
+type ConsoleCallback func(webView WebView, param uintptr, level ConsoleLevel, message string, sourceName string, sourceLine uint, stackTrace string)
 
 // mbOnCallUiThread
 // 这是一个在UI线程上调用的函数类型
-type OnCallUiThreadCallback func(webView WebView, param unsafe.Pointer)
+type OnCallUiThreadCallback func(webView WebView, param uintptr)
 
 // mbCallUiThread
 // 这是一个用于在UI线程上调用OnCallUiThread的函数类型
-type CallUiThreadCallback func(webView WebView, funcOnUiThread OnCallUiThreadCallback, param unsafe.Pointer)
+type CallUiThreadCallback func(webView WebView, funcOnUiThread OnCallUiThreadCallback, param uintptr)
 
 // LoadUrlBeginCallback
-type LoadUrlBeginCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob) bool
+type LoadUrlBeginCallback func(webView WebView, param uintptr, url string, job NetJob) bool
 
 // LoadUrlEndCallback
-type LoadUrlEndCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob, buf unsafe.Pointer, len int)
+type LoadUrlEndCallback func(webView WebView, param uintptr, url string, job NetJob, buf uintptr, len int)
 
 // 注意：buf 参数是一个 unsafe.Pointer，因为 C 中的 void* 在 Go 中没有直接对应。
 // 在实际使用时，你可能需要将其转换为合适的类型（如 []byte）来访问其内容。
 
 // LoadUrlFailCallback
-type LoadUrlFailCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob)
+type LoadUrlFailCallback func(webView WebView, param uintptr, url string, job NetJob)
 
 // LoadUrlHeadersReceivedCallback
-type LoadUrlHeadersReceivedCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob)
+type LoadUrlHeadersReceivedCallback func(webView WebView, param uintptr, url string, job NetJob)
 
 // LoadUrlFinishCallback
 // 注意：这里使用了 Utf8 类型别名，但在 Go 中直接使用 string 即可，因为 Go 的字符串默认就是 UTF-8 编码的。
-type LoadUrlFinishCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob, len int)
+type LoadUrlFinishCallback func(webView WebView, param uintptr, url string, job NetJob, len int)
 
 // mbDidCreateScriptContextCallback
-// type DidCreateScriptContextCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, context unsafe.Pointer, extensionGroup, worldId int)
+// type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int)
 
 // mbWillReleaseScriptContextCallback
-type WillReleaseScriptContextCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, context unsafe.Pointer, worldId int)
+type WillReleaseScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, worldId int)
 
 // mbNetGetFaviconCallback
-type NetGetFaviconCallback func(webView WebView, param unsafe.Pointer, url string, buf *MemBuf)
+type NetGetFaviconCallback func(webView WebView, param uintptr, url string, buf *MemBuf)
 
 // AsynRequestState 枚举类型
 type AsynRequestState int
@@ -583,20 +579,20 @@ const (
 )
 
 // CanGoBackForwardCallback
-type CanGoBackForwardCallback func(webView WebView, param unsafe.Pointer, state AsynRequestState, b bool)
+type CanGoBackForwardCallback func(webView WebView, param uintptr, state AsynRequestState, b bool)
 
 // GetCookieCallback
-type GetCookieCallback func(webView WebView, param unsafe.Pointer, state AsynRequestState, cookie string)
+type GetCookieCallback func(webView WebView, param uintptr, state AsynRequestState, cookie string)
 
 // 类型别名定义
-type V8ContextPtr unsafe.Pointer // v8引擎的上下文指针
-type V8Isolate unsafe.Pointer    // v8引擎的隔离区指针
+type V8ContextPtr uintptr // v8引擎的上下文指针
+type V8Isolate uintptr    // v8引擎的隔离区指针
 
 // GetSourceCallback
-type GetSourceCallback func(webView WebView, param unsafe.Pointer, mhtml string)
+type GetSourceCallback func(webView WebView, param uintptr, mhtml string)
 
 // GetContentAsMarkupCallback
-type GetContentAsMarkupCallback func(webView WebView, param unsafe.Pointer, content string, size uintptr)
+type GetContentAsMarkupCallback func(webView WebView, param uintptr, content string, size uintptr)
 
 // 结构体指针类型定义
 type WebUrlRequest struct{}
@@ -606,11 +602,11 @@ type WebUrlResponsePtr *WebUrlResponse
 
 // 回调函数类型定义
 // 注意：Go没有__stdcall调用约定，所以这里省略了它
-type OnUrlRequestWillRedirectCallback func(webView WebView, param unsafe.Pointer, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr)
-type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, response WebUrlResponsePtr)
-type OnUrlRequestDidReceiveDataCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, data *byte, dataLength int)
-type OnUrlRequestDidFailCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, error *uint8)
-type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, finishTime float64)
+type OnUrlRequestWillRedirectCallback func(webView WebView, param uintptr, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr)
+type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, response WebUrlResponsePtr)
+type OnUrlRequestDidReceiveDataCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, data *byte, dataLength int)
+type OnUrlRequestDidFailCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, error *uint8)
+type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, finishTime float64)
 
 // UrlRequestCallbacks 结构体
 type UrlRequestCallbacks struct {
@@ -630,19 +626,19 @@ const (
 )
 
 // 函数指针类型
-type NetJobDataRecvCallback func(ptr unsafe.Pointer, job NetJob, data *byte, length int)
-type NetJobDataFinishCallback func(ptr unsafe.Pointer, job NetJob, result LoadingResult)
-type PopupDialogSaveNameCallback func(ptr unsafe.Pointer, filePath *uint16)
+type NetJobDataRecvCallback func(ptr uintptr, job NetJob, data *byte, length int)
+type NetJobDataFinishCallback func(ptr uintptr, job NetJob, result LoadingResult)
+type PopupDialogSaveNameCallback func(ptr uintptr, filePath *uint16)
 
 // 结构体定义
 type NetJobDataBind struct {
-	Param          unsafe.Pointer
+	Param          uintptr
 	RecvCallback   NetJobDataRecvCallback
 	FinishCallback NetJobDataFinishCallback
 }
 
 type DownloadBind struct {
-	Param            unsafe.Pointer
+	Param            uintptr
 	RecvCallback     NetJobDataRecvCallback
 	FinishCallback   NetJobDataFinishCallback
 	SaveNameCallback PopupDialogSaveNameCallback
@@ -699,7 +695,7 @@ type DownloadOptions struct {
 // mbDownloadInBlinkThreadCallback 函数指针类型
 type DownloadInBlinkThreadCallback func(
 	webView WebView,
-	params unsafe.Pointer,
+	params uintptr,
 	expectedContentLength uintptr,
 	url string,
 	mime string,
@@ -711,12 +707,12 @@ type DownloadInBlinkThreadCallback func(
 // mbPdfDatas 结构体
 type PdfDatas struct {
 	Count int
-	Sizes *uintptr         // 指向 uintptr 类型的指针数组
-	Datas **unsafe.Pointer // 指向 void* 类型的指针的指针数组，即 const void**
+	Sizes *uintptr  // 指向 uintptr 类型的指针数组
+	Datas **uintptr // 指向 void* 类型的指针的指针数组，即 const void**
 }
 
 // PrintPdfDataCallback 函数指针类型
-type PrintPdfDataCallback func(webview WebView, param unsafe.Pointer, datas *PdfDatas)
+type PrintPdfDataCallback func(webview WebView, param uintptr, datas *PdfDatas)
 
 // ScreenshotSettings 结构体
 type ScreenshotSettings struct {
@@ -726,10 +722,10 @@ type ScreenshotSettings struct {
 }
 
 // PrintBitmapCallback 函数指针类型
-type PrintBitmapCallback func(webview WebView, param unsafe.Pointer, data *byte, size uintptr)
+type PrintBitmapCallback func(webview WebView, param uintptr, data *byte, size uintptr)
 
 // OnScreenshot 函数指针类型
-type OnScreenshotCallback func(webView WebView, param unsafe.Pointer, data *byte, size uintptr)
+type OnScreenshotCallback func(webView WebView, param uintptr, data *byte, size uintptr)
 
 // 枚举 mbHttBodyElementType
 type HttBodyElementType int
@@ -765,7 +761,7 @@ type WillSendRequestInfo struct {
 	HTTPResponseCode int
 	Method           StringPtr
 	Referrer         StringPtr
-	Headers          unsafe.Pointer // 使用unsafe.Pointer来替代void*
+	Headers          uintptr // 使用unsafe.Pointer来替代void*
 }
 
 // mbViewLoadType 枚举
@@ -792,7 +788,7 @@ type ViewLoadCallbackInfo struct {
 }
 
 // mbNetViewLoadInfoCallback 函数指针类型
-type NetViewLoadInfoCallback func(webView WebView, param unsafe.Pointer, type_ ViewLoadType, info *ViewLoadCallbackInfo)
+type NetViewLoadInfoCallback func(webView WebView, param uintptr, type_ ViewLoadType, info *ViewLoadCallbackInfo)
 
 // mbwindow-----------------------------------------------------------------------------------
 // mbWindowType 枚举
@@ -822,11 +818,11 @@ type DraggableRegion struct {
 }
 
 // 回调函数类型
-type WindowClosingCallback func(webview WebView, param unsafe.Pointer) bool
-type WindowDestroyCallback func(webview WebView, param unsafe.Pointer)
+type WindowClosingCallback func(webview WebView, param uintptr) bool
+type WindowDestroyCallback func(webview WebView, param uintptr)
 
 // mbDraggableRegionsChangedCallback 回调函数类型
-type DraggableRegionsChangedCallback func(webview WebView, param unsafe.Pointer, rects *DraggableRegion, rectCount int)
+type DraggableRegionsChangedCallback func(webview WebView, param uintptr, rects *DraggableRegion, rectCount int)
 
 // mbPrintintStep 枚举（注意：这里可能有个拼写错误，应该是 mbPrintStep）
 type PrintintStep int
@@ -862,7 +858,7 @@ type DefaultPrinterSettings struct {
 // mbPrintingCallback 函数指针类型
 type PrintingCallback func(
 	webview WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	step PrintintStep,
 	hDC Handle, // 假设HDC在Go中用syscall.Handle表示
 	settings *PrintintSettings,
@@ -872,7 +868,7 @@ type PrintingCallback func(
 // mbImageBufferToDataURLCallback 函数指针类型
 type ImageBufferToDataURLCallback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	data *byte, // 假设data是指向字节数组的指针
 	size uintptr, // 假设size是uintptr类型，在Go中用uintptr表示
 ) StringPtr
@@ -914,8 +910,8 @@ type mbNetGetRawHttpHeadInBlinkThread func(jobPtr NetJob) *Slist
 type mbNetGetRawResponseHeadInBlinkThread func(jobPtr NetJob) *Slist
 type mbNetHoldJobToAsynCommit func(jobPtr NetJob) bool
 type mbNetCancelRequest func(jobPtr NetJob)
-type mbNetOnResponse func(webviewHandle WebView, callback NetResponseCallback, param unsafe.Pointer)
-type mbNetSetWebsocketCallback func(webview WebView, callbacks *WebsocketHookCallbacks, param unsafe.Pointer)
+type mbNetOnResponse func(webviewHandle WebView, callback NetResponseCallback, param uintptr)
+type mbNetSetWebsocketCallback func(webview WebView, callbacks *WebsocketHookCallbacks, param uintptr)
 type mbNetSendWsText func(channel WebSocketChannel, buf *byte, len uintptr)
 type mbNetSendWsBlob func(channel WebSocketChannel, buf *byte, len uintptr)
 type mbNetEnableResPacket func(webviewHandle WebView, pathName *uint16)
@@ -926,7 +922,7 @@ type mbNetCreatePostBodyElement func(webView WebView) *PostBodyElement
 type mbNetFreePostBodyElement func(element *PostBodyElement)
 type mbNetCreateWebUrlRequest func(url, method, mime string) WebUrlRequestPtr
 type mbNetAddHTTPHeaderFieldToUrlRequest func(request WebUrlRequestPtr, name, value string)
-type mbNetStartUrlRequest func(webView WebView, request WebUrlRequestPtr, param unsafe.Pointer, callbacks *UrlRequestCallbacks) int
+type mbNetStartUrlRequest func(webView WebView, request WebUrlRequestPtr, param uintptr, callbacks *UrlRequestCallbacks) int
 type mbNetGetHttpStatusCode func(response WebUrlResponsePtr) int
 type mbNetGetRequestMethod func(jobPtr NetJob) RequestType
 type mbNetGetExpectedContentLength func(response WebUrlResponsePtr) int64
@@ -975,42 +971,42 @@ type mbSetDiskCacheLimit func(webView WebView, limit uint64)
 type mbSetDiskCacheLimitDisk func(webView WebView, limit uint64)
 type mbSetDiskCacheLevel func(webView WebView, level int)
 type mbSetResourceGc func(webView WebView, intervalSec int)
-type mbCanGoForward func(webView WebView, callback CanGoBackForwardCallback, param unsafe.Pointer)
-type mbCanGoBack func(webView WebView, callback CanGoBackForwardCallback, param unsafe.Pointer)
-type mbGetCookie func(webView WebView, callback GetCookieCallback, param unsafe.Pointer)
+type mbCanGoForward func(webView WebView, callback CanGoBackForwardCallback, param uintptr)
+type mbCanGoBack func(webView WebView, callback CanGoBackForwardCallback, param uintptr)
+type mbGetCookie func(webView WebView, callback GetCookieCallback, param uintptr)
 type mbGetCookieOnBlinkThread func(webView WebView) string
 type mbClearCookie func(webView WebView)
 type mbResize func(webView WebView, w, h int)
-type mbOnNavigation func(webView WebView, callback NavigationCallback, param unsafe.Pointer)
-type mbOnNavigationSync func(webView WebView, callback NavigationCallback, param unsafe.Pointer)
-type mbOnCreateView func(webView WebView, callback CreateViewCallback, param unsafe.Pointer)
-type mbOnDocumentReady func(webView WebView, callback DocumentReadyCallback, param unsafe.Pointer)
-type mbOnDocumentReadyInBlinkThread func(webView WebView, callback DocumentReadyCallback, param unsafe.Pointer)
-type mbOnPaintUpdated func(webView WebView, callback PaintUpdatedCallback, param unsafe.Pointer)
-type mbOnPaintBitUpdated func(webView WebView, callback PaintBitUpdatedCallback, param unsafe.Pointer)
-type mbOnAcceleratedPaint func(webView WebView, callback AcceleratedPaintCallback, param unsafe.Pointer)
-type mbOnLoadUrlBegin func(webView WebView, callback LoadUrlBeginCallback, param unsafe.Pointer)
-type mbOnLoadUrlEnd func(webView WebView, callback LoadUrlEndCallback, param unsafe.Pointer)
-type mbOnLoadUrlFail func(webView WebView, callback LoadUrlFailCallback, param unsafe.Pointer)
-type mbOnLoadUrlHeadersReceived func(webView WebView, callback LoadUrlHeadersReceivedCallback, param unsafe.Pointer)
-type mbOnLoadUrlFinish func(webView WebView, callback LoadUrlFinishCallback, param unsafe.Pointer)
-type mbOnTitleChanged func(webView WebView, callback TitleChangedCallback, callbackParam unsafe.Pointer)
-type mbOnURLChanged func(webView WebView, callback URLChangedCallback, callbackParam unsafe.Pointer)
-type mbOnLoadingFinish func(webView WebView, callback LoadingFinishCallback, param unsafe.Pointer)
-type mbOnDownload func(webView WebView, callback DownloadCallback, param unsafe.Pointer)
-type mbOnDownloadInBlinkThread func(webView WebView, callback DownloadInBlinkThreadCallback, param unsafe.Pointer)
-type mbOnAlertBox func(webView WebView, callback AlertBoxCallback, param unsafe.Pointer)
-type mbOnConfirmBox func(webView WebView, callback ConfirmBoxCallback, param unsafe.Pointer)
-type mbOnPromptBox func(webView WebView, callback PromptBoxCallback, param unsafe.Pointer)
-type mbOnNetGetFavicon func(webView WebView, callback NetGetFaviconCallback, param unsafe.Pointer)
-type mbOnConsole func(webView WebView, callback ConsoleCallback, param unsafe.Pointer)
-type mbOnClose func(webView WebView, callback CloseCallback, param unsafe.Pointer)
-type mbOnDestroy func(webView WebView, callback DestroyCallback, param unsafe.Pointer)
-type mbOnPrinting func(webView WebView, callback PrintingCallback, param unsafe.Pointer)
-type mbOnPluginList func(webView WebView, callback GetPluginListCallback, param unsafe.Pointer)
-type mbOnImageBufferToDataURL func(webView WebView, callback ImageBufferToDataURLCallback, param unsafe.Pointer)
-type mbOnDidCreateScriptContext func(webView WebView, callback DidCreateScriptContextCallback, param unsafe.Pointer)
-type mbOnWillReleaseScriptContext func(webView WebView, callback WillReleaseScriptContextCallback, param unsafe.Pointer)
+type mbOnNavigation func(webView WebView, callback NavigationCallback, param uintptr)
+type mbOnNavigationSync func(webView WebView, callback NavigationCallback, param uintptr)
+type mbOnCreateView func(webView WebView, callback CreateViewCallback, param uintptr)
+type mbOnDocumentReady func(webView WebView, callback DocumentReadyCallback, param uintptr)
+type mbOnDocumentReadyInBlinkThread func(webView WebView, callback DocumentReadyCallback, param uintptr)
+type mbOnPaintUpdated func(webView WebView, callback PaintUpdatedCallback, param uintptr)
+type mbOnPaintBitUpdated func(webView WebView, callback PaintBitUpdatedCallback, param uintptr)
+type mbOnAcceleratedPaint func(webView WebView, callback AcceleratedPaintCallback, param uintptr)
+type mbOnLoadUrlBegin func(webView WebView, callback LoadUrlBeginCallback, param uintptr)
+type mbOnLoadUrlEnd func(webView WebView, callback LoadUrlEndCallback, param uintptr)
+type mbOnLoadUrlFail func(webView WebView, callback LoadUrlFailCallback, param uintptr)
+type mbOnLoadUrlHeadersReceived func(webView WebView, callback LoadUrlHeadersReceivedCallback, param uintptr)
+type mbOnLoadUrlFinish func(webView WebView, callback LoadUrlFinishCallback, param uintptr)
+type mbOnTitleChanged func(webView WebView, callback TitleChangedCallback, callbackParam uintptr)
+type mbOnURLChanged func(webView WebView, callback URLChangedCallback, callbackParam uintptr)
+type mbOnLoadingFinish func(webView WebView, callback LoadingFinishCallback, param uintptr)
+type mbOnDownload func(webView WebView, callback DownloadCallback, param uintptr)
+type mbOnDownloadInBlinkThread func(webView WebView, callback DownloadInBlinkThreadCallback, param uintptr)
+type mbOnAlertBox func(webView WebView, callback AlertBoxCallback, param uintptr)
+type mbOnConfirmBox func(webView WebView, callback ConfirmBoxCallback, param uintptr)
+type mbOnPromptBox func(webView WebView, callback PromptBoxCallback, param uintptr)
+type mbOnNetGetFavicon func(webView WebView, callback NetGetFaviconCallback, param uintptr)
+type mbOnConsole func(webView WebView, callback ConsoleCallback, param uintptr)
+type mbOnClose func(webView WebView, callback CloseCallback, param uintptr)
+type mbOnDestroy func(webView WebView, callback DestroyCallback, param uintptr)
+type mbOnPrinting func(webView WebView, callback PrintingCallback, param uintptr)
+type mbOnPluginList func(webView WebView, callback GetPluginListCallback, param uintptr)
+type mbOnImageBufferToDataURL func(webView WebView, callback ImageBufferToDataURLCallback, param uintptr)
+type mbOnDidCreateScriptContext func(webView WebView, callback DidCreateScriptContextCallback, param uintptr)
+type mbOnWillReleaseScriptContext func(webView WebView, callback WillReleaseScriptContextCallback, param uintptr)
 type mbGoBack func(webView WebView)
 type mbGoForward func(webView WebView)
 type mbGoToOffset func(webView WebView, offset int)
@@ -1046,23 +1042,23 @@ type mbPostURL func(webView WebView, url string, postData *byte, postLen int)
 type mbGetLockedViewDC func(webView WebView) HDC
 type mbUnlockViewDC func(webView WebView)
 type mbWake func(webView WebView)
-type mbJsToV8Value func(es JsExecState, v JsValue) unsafe.Pointer
+type mbJsToV8Value func(es JsExecState, v JsValue) uintptr
 type mbGetGlobalExecByFrame func(webView WebView, frameId WebFrameHandle) JsExecState
 type mbJsToDouble func(es JsExecState, v JsValue) float64
 type mbJsToBoolean func(es JsExecState, v JsValue) bool
 type mbJsToString func(es JsExecState, v JsValue) string
 type mbGetJsValueType func(es JsExecState, v JsValue) JsType
-type mbOnJsQuery func(webView WebView, callback JsQueryCallback, param unsafe.Pointer)
+type mbOnJsQuery func(webView WebView, callback JsQueryCallback, param uintptr)
 type mbResponseQuery func(webView WebView, queryId int64, customMsg int, response string)
-type mbRunJs func(webView WebView, frameId WebFrameHandle, script string, isInClosure bool, callback RunJsCallback, param, unused unsafe.Pointer)
+type mbRunJs func(webView WebView, frameId WebFrameHandle, script string, isInClosure bool, callback RunJsCallback, param, unused uintptr)
 type mbRunJsSync func(webView WebView, frameId WebFrameHandle, script string, isInClosure bool) JsValue
 type mbWebFrameGetMainFrame func(webView WebView) WebFrameHandle
 type mbIsMainFrame func(webView WebView, frameId WebFrameHandle) bool
 type mbSetNodeJsEnable func(webView WebView, enable bool)
 type mbSetDeviceParameter func(webView WebView, device, paramStr string, paramInt int, paramFloat float32)
-type mbGetContentAsMarkup func(webView WebView, callback GetContentAsMarkupCallback, param unsafe.Pointer, frameId WebFrameHandle)
-type mbGetSource func(webView WebView, callback GetSourceCallback, param unsafe.Pointer)
-type mbUtilSerializeToMHTML func(webView WebView, callback GetSourceCallback, param unsafe.Pointer)
+type mbGetContentAsMarkup func(webView WebView, callback GetContentAsMarkupCallback, param uintptr, frameId WebFrameHandle)
+type mbGetSource func(webView WebView, callback GetSourceCallback, param uintptr)
+type mbUtilSerializeToMHTML func(webView WebView, callback GetSourceCallback, param uintptr)
 type mbUtilCreateRequestCode func(registerInfo string) string
 type mbUtilIsRegistered func(defaultPath string) bool
 type mbUtilPrint func(webView WebView, frameId WebFrameHandle, printParams *PrintSettings) bool
@@ -1071,22 +1067,22 @@ type mbUtilBase64Decode func(str string) string
 type mbUtilDecodeURLEscape func(url string) string
 type mbUtilEncodeURLEscape func(url string) string
 type mbUtilCreateV8Snapshot func(str string) *MemBuf
-type mbUtilPrintToPdf func(webView WebView, frameId WebFrameHandle, settings *PrintSettings, callback PrintPdfDataCallback, param unsafe.Pointer)
-type mbUtilPrintToBitmap func(webView WebView, frameId WebFrameHandle, settings *ScreenshotSettings, callback PrintBitmapCallback, param unsafe.Pointer)
-type mbUtilScreenshot func(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param unsafe.Pointer)
+type mbUtilPrintToPdf func(webView WebView, frameId WebFrameHandle, settings *PrintSettings, callback PrintPdfDataCallback, param uintptr)
+type mbUtilPrintToBitmap func(webView WebView, frameId WebFrameHandle, settings *ScreenshotSettings, callback PrintBitmapCallback, param uintptr)
+type mbUtilScreenshot func(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param uintptr)
 type mbUtilsSilentPrint func(webView WebView, settings string) bool
 type mbUtilSetDefaultPrinterSettings func(webView WebView, setting *DefaultPrinterSettings)
-type mbPopupDownloadMgr func(webView WebView, url string, downloadJob unsafe.Pointer) bool
+type mbPopupDownloadMgr func(webView WebView, url string, downloadJob uintptr) bool
 type mbPopupDialogAndDownload func(webView WebView, dialogOpt *DialogOptions, contentLength uint64, url, mime, disposition string, job NetJob, dataBind *NetJobDataBind, callbackBind *DownloadBind) DownloadOpt
 type mbDownloadByPath func(webView WebView, downloadOptions *DownloadOptions, path string, contentLength uint64, url, mime, disposition string, job NetJob, dataBind *NetJobDataBind, callbackBind *DownloadBind) DownloadOpt
-type mbGetPdfPageData func(webView WebView, callback OnGetPdfPageDataCallback, param unsafe.Pointer)
-type mbCreateMemBuf func(webView WebView, buf unsafe.Pointer, length uint64) *MemBuf
+type mbGetPdfPageData func(webView WebView, callback OnGetPdfPageDataCallback, param uintptr)
+type mbCreateMemBuf func(webView WebView, buf *byte, length uint64) *MemBuf
 type mbFreeMemBuf func(buf *MemBuf)
-type mbSetUserKeyValue func(webView WebView, key string, value unsafe.Pointer)
-type mbGetUserKeyValue func(webView WebView, key string) unsafe.Pointer
-type mbPluginListBuilderAddPlugin func(builder unsafe.Pointer, name, description, fileName string)
-type mbPluginListBuilderAddMediaTypeToLastPlugin func(builder unsafe.Pointer, name, description string)
-type mbPluginListBuilderAddFileExtensionToLastMediaType func(builder unsafe.Pointer, fileExtension string)
+type mbSetUserKeyValue func(webView WebView, key string, value uintptr)
+type mbGetUserKeyValue func(webView WebView, key string) uintptr
+type mbPluginListBuilderAddPlugin func(builder uintptr, name, description, fileName string)
+type mbPluginListBuilderAddMediaTypeToLastPlugin func(builder uintptr, name, description string)
+type mbPluginListBuilderAddFileExtensionToLastMediaType func(builder uintptr, fileExtension string)
 type mbGetBlinkMainThreadIsolate func() V8Isolate
 type mbWebFrameGetMainWorldScriptContext func(webView WebView, frameId WebFrameHandle, contextOut *V8ContextPtr)
 type mbEnableHighDPISupport func()
@@ -1094,10 +1090,10 @@ type mbRunMessageLoop func()
 type mbGetContentWidth func(webView WebView) int
 type mbGetContentHeight func(webView WebView) int
 type mbGetWebViewForCurrentContext func() WebView
-type mbRegisterEmbedderCustomElement func(webviewHandle WebView, frameId WebFrameHandle, name string, options, outResult unsafe.Pointer) bool
-type mbOnNodeCreateProcess func(webviewHandle WebView, callback NodeOnCreateProcessCallback, param unsafe.Pointer)
-type mbOnThreadIdle func(callback ThreadCallback, param1, param2 unsafe.Pointer)
-type mbGetProcAddr func(name string) unsafe.Pointer
+type mbRegisterEmbedderCustomElement func(webviewHandle WebView, frameId WebFrameHandle, name string, options, outResult uintptr) bool
+type mbOnNodeCreateProcess func(webviewHandle WebView, callback NodeOnCreateProcessCallback, param uintptr)
+type mbOnThreadIdle func(callback ThreadCallback, param1, param2 uintptr)
+type mbGetProcAddr func(name string) uintptr
 type mbSetMbDllPath func(dllPath string)
 type mbSetMbMainDllPath func(dllPath string)
 type mbFillFuncPtr func()

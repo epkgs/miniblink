@@ -1,8 +1,6 @@
 package mb
 
 import (
-	"unsafe"
-
 	"github.com/epkgs/miniblink/internal/lib"
 )
 
@@ -378,12 +376,12 @@ func NetCancelRequest(jobPtr NetJob) {
 	_mbNetCancelRequest.Call(jobPtr)
 }
 
-func NetOnResponse(webviewHandle WebView, callback NetResponseCallback, param unsafe.Pointer) {
+func NetOnResponse(webviewHandle WebView, callback NetResponseCallback, param uintptr) {
 	_mbNetOnResponse.LoadOnce()
 	_mbNetOnResponse.Call(webviewHandle, callback, param)
 }
 
-func NetSetWebsocketCallback(webview WebView, callbacks *WebsocketHookCallbacks, param unsafe.Pointer) {
+func NetSetWebsocketCallback(webview WebView, callbacks *WebsocketHookCallbacks, param uintptr) {
 	_mbNetSetWebsocketCallback.LoadOnce()
 	_mbNetSetWebsocketCallback.Call(webview, callbacks, param)
 }
@@ -438,7 +436,7 @@ func NetAddHTTPHeaderFieldToUrlRequest(request WebUrlRequestPtr, name, value str
 	_mbNetAddHTTPHeaderFieldToUrlRequest.Call(request, name, value)
 }
 
-func NetStartUrlRequest(webView WebView, request WebUrlRequestPtr, param unsafe.Pointer, callbacks *UrlRequestCallbacks) int {
+func NetStartUrlRequest(webView WebView, request WebUrlRequestPtr, param uintptr, callbacks *UrlRequestCallbacks) int {
 	_mbNetStartUrlRequest.LoadOnce()
 	return _mbNetStartUrlRequest.Call(webView, request, param, callbacks)
 }
@@ -680,17 +678,17 @@ func SetResourceGc(webView WebView, intervalSec int) {
 	_mbSetResourceGc.Call(webView, intervalSec)
 }
 
-func CanGoForward(webView WebView, callback CanGoBackForwardCallback, param unsafe.Pointer) {
+func CanGoForward(webView WebView, callback CanGoBackForwardCallback, param uintptr) {
 	_mbCanGoForward.LoadOnce()
 	_mbCanGoForward.Call(webView, callback, param)
 }
 
-func CanGoBack(webView WebView, callback CanGoBackForwardCallback, param unsafe.Pointer) {
+func CanGoBack(webView WebView, callback CanGoBackForwardCallback, param uintptr) {
 	_mbCanGoBack.LoadOnce()
 	_mbCanGoBack.Call(webView, callback, param)
 }
 
-func GetCookie(webView WebView, callback GetCookieCallback, param unsafe.Pointer) {
+func GetCookie(webView WebView, callback GetCookieCallback, param uintptr) {
 	_mbGetCookie.LoadOnce()
 	_mbGetCookie.Call(webView, callback, param)
 }
@@ -710,135 +708,135 @@ func Resize(webView WebView, w, h int) {
 	_mbResize.Call(webView, w, h)
 }
 
-func OnNavigation(webView WebView, callback NavigationCallback, param unsafe.Pointer) {
+func OnNavigation(webView WebView, callback NavigationCallback, param uintptr) {
 	_mbOnNavigation.LoadOnce()
 	_mbOnNavigation.Call(webView, callback, param)
 }
 
-func OnNavigationSync(webView WebView, callback NavigationCallback, param unsafe.Pointer) {
+func OnNavigationSync(webView WebView, callback NavigationCallback, param uintptr) {
 	_mbOnNavigationSync.LoadOnce()
 	_mbOnNavigationSync.Call(webView, callback, param)
 }
 
-func OnCreateView(webView WebView, callback CreateViewCallback, param unsafe.Pointer) {
+func OnCreateView(webView WebView, callback CreateViewCallback, param uintptr) {
 	_mbOnCreateView.LoadOnce()
 	_mbOnCreateView.Call(webView, callback, param)
 }
 
-func OnDocumentReady(webView WebView, callback DocumentReadyCallback, param unsafe.Pointer) {
+func OnDocumentReady(webView WebView, callback DocumentReadyCallback, param uintptr) {
 	_mbOnDocumentReady.LoadOnce()
 	_mbOnDocumentReady.Call(webView, callback, param)
 }
 
-func OnDocumentReadyInBlinkThread(webView WebView, callback DocumentReadyCallback, param unsafe.Pointer) {
+func OnDocumentReadyInBlinkThread(webView WebView, callback DocumentReadyCallback, param uintptr) {
 	_mbOnDocumentReadyInBlinkThread.LoadOnce()
 	_mbOnDocumentReadyInBlinkThread.Call(webView, callback, param)
 }
 
-func OnPaintUpdated(webView WebView, callback PaintUpdatedCallback, param unsafe.Pointer) {
+func OnPaintUpdated(webView WebView, callback PaintUpdatedCallback, param uintptr) {
 	_mbOnPaintUpdated.LoadOnce()
 	_mbOnPaintUpdated.Call(webView, callback, param)
 }
 
-func OnPaintBitUpdated(webView WebView, callback PaintBitUpdatedCallback, param unsafe.Pointer) {
+func OnPaintBitUpdated(webView WebView, callback PaintBitUpdatedCallback, param uintptr) {
 	_mbOnPaintBitUpdated.LoadOnce()
 	_mbOnPaintBitUpdated.Call(webView, callback, param)
 }
 
-func OnAcceleratedPaint(webView WebView, callback AcceleratedPaintCallback, param unsafe.Pointer) {
+func OnAcceleratedPaint(webView WebView, callback AcceleratedPaintCallback, param uintptr) {
 	_mbOnAcceleratedPaint.LoadOnce()
 	_mbOnAcceleratedPaint.Call(webView, callback, param)
 }
 
-func OnLoadUrlBegin(webView WebView, callback LoadUrlBeginCallback, param unsafe.Pointer) {
+func OnLoadUrlBegin(webView WebView, callback LoadUrlBeginCallback, param uintptr) {
 	_mbOnLoadUrlBegin.LoadOnce()
 	_mbOnLoadUrlBegin.Call(webView, callback, param)
 }
 
-func OnLoadUrlEnd(webView WebView, callback LoadUrlEndCallback, param unsafe.Pointer) {
+func OnLoadUrlEnd(webView WebView, callback LoadUrlEndCallback, param uintptr) {
 	_mbOnLoadUrlEnd.LoadOnce()
 	_mbOnLoadUrlEnd.Call(webView, callback, param)
 }
 
-func OnLoadUrlFail(webView WebView, callback LoadUrlFailCallback, param unsafe.Pointer) {
+func OnLoadUrlFail(webView WebView, callback LoadUrlFailCallback, param uintptr) {
 	_mbOnLoadUrlFail.LoadOnce()
 	_mbOnLoadUrlFail.Call(webView, callback, param)
 }
 
-func OnLoadUrlHeadersReceived(webView WebView, callback LoadUrlHeadersReceivedCallback, param unsafe.Pointer) {
+func OnLoadUrlHeadersReceived(webView WebView, callback LoadUrlHeadersReceivedCallback, param uintptr) {
 	_mbOnLoadUrlHeadersReceived.LoadOnce()
 	_mbOnLoadUrlHeadersReceived.Call(webView, callback, param)
 }
 
-func OnLoadUrlFinish(webView WebView, callback LoadUrlFinishCallback, param unsafe.Pointer) {
+func OnLoadUrlFinish(webView WebView, callback LoadUrlFinishCallback, param uintptr) {
 	_mbOnLoadUrlFinish.LoadOnce()
 	_mbOnLoadUrlFinish.Call(webView, callback, param)
 }
-func OnTitleChanged(webView WebView, callback TitleChangedCallback, callbackParam unsafe.Pointer) {
+func OnTitleChanged(webView WebView, callback TitleChangedCallback, callbackParam uintptr) {
 	_mbOnTitleChanged.LoadOnce()
 	_mbOnTitleChanged.Call(webView, callback, callbackParam)
 }
-func OnURLChanged(webView WebView, callback URLChangedCallback, callbackParam unsafe.Pointer) {
+func OnURLChanged(webView WebView, callback URLChangedCallback, callbackParam uintptr) {
 	_mbOnURLChanged.LoadOnce()
 	_mbOnURLChanged.Call(webView, callback, callbackParam)
 }
-func OnLoadingFinish(webView WebView, callback LoadingFinishCallback, param unsafe.Pointer) {
+func OnLoadingFinish(webView WebView, callback LoadingFinishCallback, param uintptr) {
 	_mbOnLoadingFinish.LoadOnce()
 	_mbOnLoadingFinish.Call(webView, callback, param)
 }
-func OnDownload(webView WebView, callback DownloadCallback, param unsafe.Pointer) {
+func OnDownload(webView WebView, callback DownloadCallback, param uintptr) {
 	_mbOnDownload.LoadOnce()
 	_mbOnDownload.Call(webView, callback, param)
 }
-func OnDownloadInBlinkThread(webView WebView, callback DownloadInBlinkThreadCallback, param unsafe.Pointer) {
+func OnDownloadInBlinkThread(webView WebView, callback DownloadInBlinkThreadCallback, param uintptr) {
 	_mbOnDownloadInBlinkThread.LoadOnce()
 	_mbOnDownloadInBlinkThread.Call(webView, callback, param)
 }
-func OnAlertBox(webView WebView, callback AlertBoxCallback, param unsafe.Pointer) {
+func OnAlertBox(webView WebView, callback AlertBoxCallback, param uintptr) {
 	_mbOnAlertBox.LoadOnce()
 	_mbOnAlertBox.Call(webView, callback, param)
 }
-func OnConfirmBox(webView WebView, callback ConfirmBoxCallback, param unsafe.Pointer) {
+func OnConfirmBox(webView WebView, callback ConfirmBoxCallback, param uintptr) {
 	_mbOnConfirmBox.LoadOnce()
 	_mbOnConfirmBox.Call(webView, callback, param)
 }
-func OnPromptBox(webView WebView, callback PromptBoxCallback, param unsafe.Pointer) {
+func OnPromptBox(webView WebView, callback PromptBoxCallback, param uintptr) {
 	_mbOnPromptBox.LoadOnce()
 	_mbOnPromptBox.Call(webView, callback, param)
 }
-func OnNetGetFavicon(webView WebView, callback NetGetFaviconCallback, param unsafe.Pointer) {
+func OnNetGetFavicon(webView WebView, callback NetGetFaviconCallback, param uintptr) {
 	_mbOnNetGetFavicon.LoadOnce()
 	_mbOnNetGetFavicon.Call(webView, callback, param)
 }
-func OnConsole(webView WebView, callback ConsoleCallback, param unsafe.Pointer) {
+func OnConsole(webView WebView, callback ConsoleCallback, param uintptr) {
 	_mbOnConsole.LoadOnce()
 	_mbOnConsole.Call(webView, callback, param)
 }
-func OnClose(webView WebView, callback CloseCallback, param unsafe.Pointer) {
+func OnClose(webView WebView, callback CloseCallback, param uintptr) {
 	_mbOnClose.LoadOnce()
 	_mbOnClose.Call(webView, callback, param)
 }
-func OnDestroy(webView WebView, callback DestroyCallback, param unsafe.Pointer) {
+func OnDestroy(webView WebView, callback DestroyCallback, param uintptr) {
 	_mbOnDestroy.LoadOnce()
 	_mbOnDestroy.Call(webView, callback, param)
 }
-func OnPrinting(webView WebView, callback PrintingCallback, param unsafe.Pointer) {
+func OnPrinting(webView WebView, callback PrintingCallback, param uintptr) {
 	_mbOnPrinting.LoadOnce()
 	_mbOnPrinting.Call(webView, callback, param)
 }
-func OnPluginList(webView WebView, callback GetPluginListCallback, param unsafe.Pointer) {
+func OnPluginList(webView WebView, callback GetPluginListCallback, param uintptr) {
 	_mbOnPluginList.LoadOnce()
 	_mbOnPluginList.Call(webView, callback, param)
 }
-func OnImageBufferToDataURL(webView WebView, callback ImageBufferToDataURLCallback, param unsafe.Pointer) {
+func OnImageBufferToDataURL(webView WebView, callback ImageBufferToDataURLCallback, param uintptr) {
 	_mbOnImageBufferToDataURL.LoadOnce()
 	_mbOnImageBufferToDataURL.Call(webView, callback, param)
 }
-func OnDidCreateScriptContext(webView WebView, callback DidCreateScriptContextCallback, param unsafe.Pointer) {
+func OnDidCreateScriptContext(webView WebView, callback DidCreateScriptContextCallback, param uintptr) {
 	_mbOnDidCreateScriptContext.LoadOnce()
 	_mbOnDidCreateScriptContext.Call(webView, callback, param)
 }
-func OnWillReleaseScriptContext(webView WebView, callback WillReleaseScriptContextCallback, param unsafe.Pointer) {
+func OnWillReleaseScriptContext(webView WebView, callback WillReleaseScriptContextCallback, param uintptr) {
 	_mbOnWillReleaseScriptContext.LoadOnce()
 	_mbOnWillReleaseScriptContext.Call(webView, callback, param)
 }
@@ -984,7 +982,7 @@ func Wake(webView WebView) {
 	_mbWake.LoadOnce()
 	_mbWake.Call(webView)
 }
-func JsToV8Value(es JsExecState, v JsValue) unsafe.Pointer {
+func JsToV8Value(es JsExecState, v JsValue) uintptr {
 	_mbJsToV8Value.LoadOnce()
 	return _mbJsToV8Value.Call(es, v)
 }
@@ -1008,7 +1006,7 @@ func GetJsValueType(es JsExecState, v JsValue) JsType {
 	_mbGetJsValueType.LoadOnce()
 	return _mbGetJsValueType.Call(es, v)
 }
-func OnJsQuery(webView WebView, callback JsQueryCallback, param unsafe.Pointer) {
+func OnJsQuery(webView WebView, callback JsQueryCallback, param uintptr) {
 	_mbOnJsQuery.LoadOnce()
 	_mbOnJsQuery.Call(webView, callback, param)
 }
@@ -1016,7 +1014,7 @@ func ResponseQuery(webView WebView, queryId int64, customMsg int, response strin
 	_mbResponseQuery.LoadOnce()
 	_mbResponseQuery.Call(webView, queryId, customMsg, response)
 }
-func RunJs(webView WebView, frameId WebFrameHandle, script string, isInClosure bool, callback RunJsCallback, param, unused unsafe.Pointer) {
+func RunJs(webView WebView, frameId WebFrameHandle, script string, isInClosure bool, callback RunJsCallback, param, unused uintptr) {
 	_mbRunJs.LoadOnce()
 	_mbRunJs.Call(webView, frameId, script, isInClosure, callback, param, unused)
 }
@@ -1040,15 +1038,15 @@ func SetDeviceParameter(webView WebView, device, paramStr string, paramInt int, 
 	_mbSetDeviceParameter.LoadOnce()
 	_mbSetDeviceParameter.Call(webView, device, paramStr, paramInt, paramFloat)
 }
-func GetContentAsMarkup(webView WebView, callback GetContentAsMarkupCallback, param unsafe.Pointer, frameId WebFrameHandle) {
+func GetContentAsMarkup(webView WebView, callback GetContentAsMarkupCallback, param uintptr, frameId WebFrameHandle) {
 	_mbGetContentAsMarkup.LoadOnce()
 	_mbGetContentAsMarkup.Call(webView, callback, param, frameId)
 }
-func GetSource(webView WebView, callback GetSourceCallback, param unsafe.Pointer) {
+func GetSource(webView WebView, callback GetSourceCallback, param uintptr) {
 	_mbGetSource.LoadOnce()
 	_mbGetSource.Call(webView, callback, param)
 }
-func UtilSerializeToMHTML(webView WebView, callback GetSourceCallback, param unsafe.Pointer) {
+func UtilSerializeToMHTML(webView WebView, callback GetSourceCallback, param uintptr) {
 	_mbUtilSerializeToMHTML.LoadOnce()
 	_mbUtilSerializeToMHTML.Call(webView, callback, param)
 }
@@ -1084,15 +1082,15 @@ func UtilCreateV8Snapshot(str string) *MemBuf {
 	_mbUtilCreateV8Snapshot.LoadOnce()
 	return _mbUtilCreateV8Snapshot.Call(str)
 }
-func UtilPrintToPdf(webView WebView, frameId WebFrameHandle, settings *PrintSettings, callback PrintPdfDataCallback, param unsafe.Pointer) {
+func UtilPrintToPdf(webView WebView, frameId WebFrameHandle, settings *PrintSettings, callback PrintPdfDataCallback, param uintptr) {
 	_mbUtilPrintToPdf.LoadOnce()
 	_mbUtilPrintToPdf.Call(webView, frameId, settings, callback, param)
 }
-func UtilPrintToBitmap(webView WebView, frameId WebFrameHandle, settings *ScreenshotSettings, callback PrintBitmapCallback, param unsafe.Pointer) {
+func UtilPrintToBitmap(webView WebView, frameId WebFrameHandle, settings *ScreenshotSettings, callback PrintBitmapCallback, param uintptr) {
 	_mbUtilPrintToBitmap.LoadOnce()
 	_mbUtilPrintToBitmap.Call(webView, frameId, settings, callback, param)
 }
-func UtilScreenshot(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param unsafe.Pointer) {
+func UtilScreenshot(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param uintptr) {
 	_mbUtilScreenshot.LoadOnce()
 	_mbUtilScreenshot.Call(webView, settings, callback, param)
 }
@@ -1104,7 +1102,7 @@ func UtilSetDefaultPrinterSettings(webView WebView, setting *DefaultPrinterSetti
 	_mbUtilSetDefaultPrinterSettings.LoadOnce()
 	_mbUtilSetDefaultPrinterSettings.Call(webView, setting)
 }
-func PopupDownloadMgr(webView WebView, url string, downloadJob unsafe.Pointer) bool {
+func PopupDownloadMgr(webView WebView, url string, downloadJob uintptr) bool {
 	_mbPopupDownloadMgr.LoadOnce()
 	return _mbPopupDownloadMgr.Call(webView, url, downloadJob)
 }
@@ -1116,11 +1114,11 @@ func DownloadByPath(webView WebView, downloadOptions *DownloadOptions, path stri
 	_mbDownloadByPath.LoadOnce()
 	return _mbDownloadByPath.Call(webView, downloadOptions, path, contentLength, url, mime, disposition, job, dataBind, callbackBind)
 }
-func GetPdfPageData(webView WebView, callback OnGetPdfPageDataCallback, param unsafe.Pointer) {
+func GetPdfPageData(webView WebView, callback OnGetPdfPageDataCallback, param uintptr) {
 	_mbGetPdfPageData.LoadOnce()
 	_mbGetPdfPageData.Call(webView, callback, param)
 }
-func CreateMemBuf(webView WebView, buf unsafe.Pointer, length uint64) *MemBuf {
+func CreateMemBuf(webView WebView, buf *byte, length uint64) *MemBuf {
 	_mbCreateMemBuf.LoadOnce()
 	return _mbCreateMemBuf.Call(webView, buf, length)
 }
@@ -1128,23 +1126,23 @@ func FreeMemBuf(buf *MemBuf) {
 	_mbFreeMemBuf.LoadOnce()
 	_mbFreeMemBuf.Call(buf)
 }
-func SetUserKeyValue(webView WebView, key string, value unsafe.Pointer) {
+func SetUserKeyValue(webView WebView, key string, value uintptr) {
 	_mbSetUserKeyValue.LoadOnce()
 	_mbSetUserKeyValue.Call(webView, key, value)
 }
-func GetUserKeyValue(webView WebView, key string) unsafe.Pointer {
+func GetUserKeyValue(webView WebView, key string) uintptr {
 	_mbGetUserKeyValue.LoadOnce()
 	return _mbGetUserKeyValue.Call(webView, key)
 }
-func PluginListBuilderAddPlugin(builder unsafe.Pointer, name, description, fileName string) {
+func PluginListBuilderAddPlugin(builder uintptr, name, description, fileName string) {
 	_mbPluginListBuilderAddPlugin.LoadOnce()
 	_mbPluginListBuilderAddPlugin.Call(builder, name, description, fileName)
 }
-func PluginListBuilderAddMediaTypeToLastPlugin(builder unsafe.Pointer, name, description string) {
+func PluginListBuilderAddMediaTypeToLastPlugin(builder uintptr, name, description string) {
 	_mbPluginListBuilderAddMediaTypeToLastPlugin.LoadOnce()
 	_mbPluginListBuilderAddMediaTypeToLastPlugin.Call(builder, name, description)
 }
-func PluginListBuilderAddFileExtensionToLastMediaType(builder unsafe.Pointer, fileExtension string) {
+func PluginListBuilderAddFileExtensionToLastMediaType(builder uintptr, fileExtension string) {
 	_mbPluginListBuilderAddFileExtensionToLastMediaType.LoadOnce()
 	_mbPluginListBuilderAddFileExtensionToLastMediaType.Call(builder, fileExtension)
 }
@@ -1176,19 +1174,19 @@ func GetWebViewForCurrentContext() WebView {
 	_mbGetWebViewForCurrentContext.LoadOnce()
 	return _mbGetWebViewForCurrentContext.Call()
 }
-func RegisterEmbedderCustomElement(webviewHandle WebView, frameId WebFrameHandle, name string, options, outResult unsafe.Pointer) bool {
+func RegisterEmbedderCustomElement(webviewHandle WebView, frameId WebFrameHandle, name string, options, outResult uintptr) bool {
 	_mbRegisterEmbedderCustomElement.LoadOnce()
 	return _mbRegisterEmbedderCustomElement.Call(webviewHandle, frameId, name, options, outResult)
 }
-func OnNodeCreateProcess(webviewHandle WebView, callback NodeOnCreateProcessCallback, param unsafe.Pointer) {
+func OnNodeCreateProcess(webviewHandle WebView, callback NodeOnCreateProcessCallback, param uintptr) {
 	_mbOnNodeCreateProcess.LoadOnce()
 	_mbOnNodeCreateProcess.Call(webviewHandle, callback, param)
 }
-func OnThreadIdle(callback ThreadCallback, param1, param2 unsafe.Pointer) {
+func OnThreadIdle(callback ThreadCallback, param1, param2 uintptr) {
 	_mbOnThreadIdle.LoadOnce()
 	_mbOnThreadIdle.Call(callback, param1, param2)
 }
-func GetProcAddr(name string) unsafe.Pointer {
+func GetProcAddr(name string) uintptr {
 	_mbGetProcAddr.LoadOnce()
 	return _mbGetProcAddr.Call(name)
 }
