@@ -29,12 +29,7 @@ func LoadLibrary(libfile string) error {
 		}
 	}
 
-	if h, e := LoadEmbedLibrary(); e == nil {
-		HMODULE = h
-		return nil
-	} else {
-		return e
-	}
+	return LoadEmbedLibrary()
 }
 
 type LazyFunc[F any] struct {
@@ -55,13 +50,18 @@ func (lf *LazyFunc[F]) LoadOnce() {
 
 // LoadEmbedLibrary 函数用于加载嵌入的静态链接库文件
 // 如果加载成功，则返回nil；否则返回错误信息
-func LoadEmbedLibrary() (uintptr, error) {
+func LoadEmbedLibrary() error {
 	targetFile, err := generateLibFile()
 	if err != nil {
-		return 0, err
+		return err
 	}
-	// 加载释放后的静态链接库文件
-	return loadLibrary(targetFile)
+
+	if h, err := loadLibrary(targetFile); err == nil {
+		HMODULE = h
+		return nil
+	} else {
+		return err
+	}
 }
 
 func Release() (err error) {

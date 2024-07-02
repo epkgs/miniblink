@@ -6,8 +6,17 @@ import (
 	"github.com/epkgs/miniblink/internal/lib"
 )
 
-var LoadLibrary = lib.LoadLibrary
-var LoadEmbedLibrary = lib.LoadEmbedLibrary
+func LoadLibrary(libfile string) error {
+	return lib.LoadLibrary(libfile)
+}
+
+func LoadEmbedLibrary() error {
+	return lib.LoadEmbedLibrary()
+}
+
+func Release() error {
+	return lib.Release()
+}
 
 var _mbInit = lib.LazyFunc[mbInit]{Name: "mbInit"}
 var _mbUninit = lib.LazyFunc[mbUninit]{Name: "mbUninit"}
