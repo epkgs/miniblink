@@ -338,9 +338,9 @@ func SetDebugConfig(webView WebView, debugString, param string) {
 	_mbSetDebugConfig.Call(webView, debugString, param)
 }
 
-func NetSetData(jobPtr NetJob, buf unsafe.Pointer, len int) {
+func NetSetData(jobPtr NetJob, buf []byte) {
 	_mbNetSetData.LoadOnce()
-	_mbNetSetData.Call(jobPtr, buf, len)
+	_mbNetSetData.Call(jobPtr, &buf[0], len(buf))
 }
 
 func NetHookRequest(jobPtr NetJob) {

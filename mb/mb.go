@@ -906,7 +906,7 @@ type mbGetStringLen func(str StringPtr) uintptr
 type mbGetString func(str StringPtr) string
 type mbSetProxy func(webView WebView, proxy *Proxy)
 type mbSetDebugConfig func(webView WebView, debugString, param string)
-type mbNetSetData func(jobPtr NetJob, buf unsafe.Pointer, len int)
+type mbNetSetData func(jobPtr NetJob, buf *byte, len int)
 type mbNetHookRequest func(jobPtr NetJob)
 type mbNetChangeRequestUrl func(jobPtr NetJob, url string)
 type mbNetContinueJob func(jobPtr NetJob)
