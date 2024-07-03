@@ -1,5 +1,7 @@
 package mb
 
+import "unsafe"
+
 // Rect 对应 C++ 中的 _Rect 结构体
 type Rect struct {
 	X, Y, W, H int
@@ -405,7 +407,7 @@ type RunJsCallback func(webView WebView, param uintptr, es JsExecState, v JsValu
 type JsQueryCallback func(webView WebView, param uintptr, es JsExecState, queryId int64, customMsg int, request string)
 
 // mbTitleChangedCallback
-type TitleChangedCallback func(webView WebView, param uintptr, title string)
+type TitleChangedCallback func(webView WebView, param unsafe.Pointer, title uintptr) uintptr
 
 // mbMouseOverUrlChangedCallback
 type MouseOverUrlChangedCallback func(webView WebView, param uintptr, url string)
@@ -952,7 +954,7 @@ type mbSetCookie func(webView WebView, url, cookie string)
 type mbSetCookieEnabled func(webView WebView, enable bool)
 type mbSetCookieJarPath func(webView WebView, path string)
 type mbSetCookieJarFullPath func(webView WebView, path string)
-type mbSetLocalStorageFullPath func(webView WebView, path string)
+type mbSetLocalStorageFullPath func(webView WebView, path *uint16)
 type mbGetTitle func(webView WebView) string
 type mbSetWindowTitle func(webView WebView, title string)
 type mbSetWindowTitleW func(webView WebView, title string)

@@ -2,6 +2,7 @@ package mb
 
 import (
 	"github.com/epkgs/miniblink/internal/lib"
+	"golang.org/x/sys/windows"
 )
 
 func LoadLibrary(libfile string) error {
@@ -601,7 +602,8 @@ func SetCookieJarFullPath(webView WebView, path string) {
 
 func SetLocalStorageFullPath(webView WebView, path string) {
 	_mbSetLocalStorageFullPath.LoadOnce()
-	_mbSetLocalStorageFullPath.Call(webView, path)
+	wchar := windows.StringToUTF16(path)
+	_mbSetLocalStorageFullPath.Call(webView, &wchar[0])
 }
 
 func GetTitle(webView WebView) string {
