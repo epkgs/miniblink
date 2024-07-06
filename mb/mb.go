@@ -4,17 +4,17 @@ import "unsafe"
 
 // Rect 对应 C++ 中的 _Rect 结构体
 type Rect struct {
-	X, Y, W, H int
+	X, Y, W, H int32
 }
 
 // mbPoint 对应 C++ 中的 _mbPoint 结构体
 type Point struct {
-	X, Y int
+	X, Y int32
 }
 
 // mbSize 对应 C++ 中的 _mbSize 结构体
 type Size struct {
-	W, H int
+	W, H int32
 }
 
 // mbMouseFlags 对应 C++ 中的枚举
@@ -52,13 +52,6 @@ const (
 	MSG_MBUTTONDBLCLK MouseMsg = 0x0209
 	MSG_MOUSEWHEEL    MouseMsg = 0x020A
 )
-
-// wchar_t 的定义，如果平台不支持 wchar_t，这里会定义一个别名
-// 但在Go中，我们通常会直接使用 rune 类型来表示 Unicode 字符
-type Wchar_t uint16 // 假设 wchar_t 在不支持的平台上是 unsigned short
-
-// Utf8 类型在Go中通常就是 byte 或 []byte，这里我们直接使用 byte
-type Utf8 byte
 
 // 保留C枚举的大小写
 type ProxyType int
@@ -101,7 +94,7 @@ type OnBlinkThreadInitCallback func(param uintptr) (anyRes uintptr)
 // mbSettings 对应 C++ 中的 _mbSettings 结构体
 type Settings struct {
 	Proxy                        Proxy
-	Mask                         uint
+	Mask                         uint32
 	BlinkThreadInitCallback      OnBlinkThreadInitCallback
 	BlinkThreadInitCallbackParam uintptr // 使用unsafe.Pointer来存储任意类型的指针
 	Version                      uintptr
@@ -112,8 +105,8 @@ type Settings struct {
 
 // mbViewSettings 对应 C++ 中的 _mbViewSettings 结构体
 type ViewSettings struct {
-	Size    int
-	BgColor uint
+	Size    int32
+	BgColor uint32
 }
 
 // WebFrameHandle 对应 C++ 中的 void*
@@ -124,6 +117,8 @@ type NetJob uintptr
 
 // WebView 对应 C++ 中的 intptr_t
 type WebView uintptr
+
+// type bool uint32
 
 // 假设NULL_WEBVIEW在Go中是一个常量
 const NULL_WEBVIEW = 0
@@ -210,7 +205,7 @@ const (
 
 // mbWindowFeatures 对应 C 中的结构体
 type WindowFeatures struct {
-	X, Y, Width, Height int
+	X, Y, Width, Height int32
 	MenuBarVisible      bool
 	StatusBarVisible    bool
 	ToolBarVisible      bool
@@ -222,29 +217,22 @@ type WindowFeatures struct {
 
 // PrintSettings 对应 C 中的结构体
 type PrintSettings struct {
-	StructSize               int
-	DPI                      int
-	Width, Height            int
-	MarginTop, MarginBottom  int
-	MarginLeft, MarginRight  int
+	StructSize               int32
+	DPI                      int32
+	Width, Height            int32
+	MarginTop, MarginBottom  int32
+	MarginLeft, MarginRight  int32
 	IsPrintPageHeadAndFooter bool
 	IsPrintBackgroud         bool // 注意：这里假设是 Background 的拼写错误，并修正为 Background
 	IsLandscape              bool
 	IsPrintToMultiPage       bool
 }
 
-// String 在Go中通常不会定义为指针类型别名，而是直接定义结构体
-// 由于我们没有具体的mbString结构体内容，这里仅作为占位符
-type String struct {
-	// 假设这里有一些字段，但具体取决于C中的mbString定义
-}
-
-// StringPtr 是指向String结构体的指针类型
-type StringPtr *String
+type StringPtr uintptr
 
 // MemBuf 对应C中的_MemBuf结构体
 type MemBuf struct {
-	Size   int
+	Size   int32
 	Data   uintptr // 使用unsafe.Pointer来表示void*
 	Length uintptr // uintptr在Go中通常对应uintptr或uint，具体取决于你的平台和编译器
 }
@@ -276,8 +264,8 @@ type Item struct {
 // WebDragData 结构体
 type WebDragData struct {
 	ItemList         []*Item
-	ItemListLength   int
-	ModifierKeyState int // State of Shift/Ctrl/Alt/Meta keys
+	ItemListLength   int32
+	ModifierKeyState int32 // State of Shift/Ctrl/Alt/Meta keys
 	FileSystemID     *MemBuf
 }
 
@@ -333,7 +321,7 @@ const (
 
 // Slist 对应C中的结构体
 type Slist struct {
-	Data *string // 使用指针来模拟C中的char*
+	Data *byte // 使用指针来模拟C中的char*
 	Next *Slist
 }
 
@@ -358,19 +346,19 @@ const (
 type WebSocketChannel uintptr
 
 // 回调函数签名
-type OnWillConnectCallback func(webView WebView, param uintptr, channel WebSocketChannel, url string) (StringPtr, bool)
+type OnWillConnectCallback func(webView WebView, param uintptr, channel WebSocketChannel, url string, needHook bool) StringPtr
 type OnConnectedCallback func(webView WebView, param uintptr, channel WebSocketChannel) bool
-type OnReceiveCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
-type OnSendCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len int) (StringPtr, bool)
-type OnErrorCallback func(webView WebView, param uintptr, channel WebSocketChannel)
+type OnReceiveCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len uintptr, isContinue bool) StringPtr
+type OnSendCallback func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len uintptr, isContinue bool) StringPtr
+type OnErrorCallback func(webView WebView, param uintptr, channel WebSocketChannel) (void uintptr)
 
 // 回调接口定义
-type WebsocketHookCallbacks interface {
-	OnWillConnect(OnWillConnectCallback)
-	OnConnected(OnConnectedCallback)
-	OnReceive(OnReceiveCallback)
-	OnSend(OnSendCallback)
-	OnError(OnErrorCallback)
+type WebsocketHookCallbacks struct {
+	OnWillConnect OnWillConnectCallback
+	OnConnected   OnConnectedCallback
+	OnReceive     OnReceiveCallback
+	OnSend        OnSendCallback
+	OnError       OnErrorCallback
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -398,39 +386,39 @@ type JsValue uintptr
 type JsExecState uintptr
 
 // OnGetPdfPageDataCallback 对应C中的回调函数类型
-type OnGetPdfPageDataCallback func(webView WebView, param uintptr, data uintptr, size uintptr)
+type OnGetPdfPageDataCallback func(webView WebView, param uintptr, data uintptr, size uintptr) (void uintptr)
 
 // RunJsCallback 对应C中的回调函数类型
-type RunJsCallback func(webView WebView, param uintptr, es JsExecState, v JsValue)
+type RunJsCallback func(webView WebView, param uintptr, es JsExecState, v JsValue) (void uintptr)
 
 // JsQueryCallback 对应C中的回调函数类型
-type JsQueryCallback func(webView WebView, param uintptr, es JsExecState, queryId int64, customMsg int, request string)
+type JsQueryCallback func(webView WebView, param uintptr, es JsExecState, queryId int64, customMsg int, request string) (void uintptr)
 
 // mbTitleChangedCallback
-type TitleChangedCallback func(webView WebView, param unsafe.Pointer, title uintptr) uintptr
+type TitleChangedCallback func(webView WebView, param unsafe.Pointer, title uintptr) (void uintptr)
 
 // mbMouseOverUrlChangedCallback
-type MouseOverUrlChangedCallback func(webView WebView, param uintptr, url string)
+type MouseOverUrlChangedCallback func(webView WebView, param uintptr, url string) (void uintptr)
 
 // mbURLChangedCallback
-type URLChangedCallback func(webView WebView, param uintptr, url string, canGoBack bool, canGoForward bool)
+type URLChangedCallback func(webView WebView, param uintptr, url string, canGoBack bool, canGoForward bool) (void uintptr)
 
 // mbURLChangedCallback2
-type URLChangedCallback2Callback func(webView WebView, param uintptr, frameId WebFrameHandle, url string)
+type URLChangedCallback2Callback func(webView WebView, param uintptr, frameId WebFrameHandle, url string) (void uintptr)
 
 // PaintUpdatedCallback
 // 注意：HDC是Windows特有的类型，这里假设它已经作为uintptr类型定义
 type HDC uintptr
-type PaintUpdatedCallback func(webView WebView, param uintptr, hdc HDC, x, y, cx, cy int)
+type PaintUpdatedCallback func(webView WebView, param uintptr, hdc HDC, x, y, cx, cy int) (void uintptr)
 
 // AcceleratedPaintCallback
-type AcceleratedPaintCallback func(webView WebView, param uintptr, typ int, dirytRects *Rect, dirytRectsSize uintptr, sharedHandle uintptr)
+type AcceleratedPaintCallback func(webView WebView, param uintptr, typ int, dirytRects *Rect, dirytRectsSize uintptr, sharedHandle uintptr) (void uintptr)
 
 // PaintBitUpdatedCallback
-type PaintBitUpdatedCallback func(webView WebView, param uintptr, buffer uintptr, r *Rect, width, height int)
+type PaintBitUpdatedCallback func(webView WebView, param uintptr, buffer uintptr, r *Rect, width, height int) (void uintptr)
 
 // mbAlertBoxCallback
-type AlertBoxCallback func(webView WebView, param uintptr, msg string)
+type AlertBoxCallback func(webView WebView, param uintptr, msg string) (void uintptr)
 
 // mbConfirmBoxCallback
 type ConfirmBoxCallback func(webView WebView, param uintptr, msg string) bool
@@ -445,7 +433,7 @@ type NavigationCallback func(webView WebView, param uintptr, navigationType Navi
 type CreateViewCallback func(webView WebView, param uintptr, navigationType NavigationType, url string, windowFeatures *WindowFeatures) WebView
 
 // DocumentReadyCallback
-type DocumentReadyCallback func(webView WebView, param uintptr, frameId WebFrameHandle)
+type DocumentReadyCallback func(webView WebView, param uintptr, frameId WebFrameHandle) (void uintptr)
 
 // mbCloseCallback
 type CloseCallback func(webView WebView, param uintptr, unuse uintptr) bool
@@ -454,10 +442,10 @@ type CloseCallback func(webView WebView, param uintptr, unuse uintptr) bool
 type DestroyCallback func(webView WebView, param uintptr, unuse uintptr) bool
 
 // mbOnShowDevtoolsCallback
-type OnShowDevtoolsCallback func(webView WebView, param uintptr)
+type OnShowDevtoolsCallback func(webView WebView, param uintptr) (void uintptr)
 
 // mbDidCreateScriptContextCallback
-type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int)
+type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int) (void uintptr)
 
 // mbGetPluginListCallback
 type GetPluginListCallback func(refresh bool, pluginListBuilder, param uintptr) bool
@@ -466,7 +454,7 @@ type GetPluginListCallback func(refresh bool, pluginListBuilder, param uintptr) 
 type NetResponseCallback func(webView WebView, param uintptr, url string, job NetJob) bool
 
 // ThreadCallback
-type ThreadCallback func(param1, param2 uintptr)
+type ThreadCallback func(param1, param2 uintptr) (void uintptr)
 
 // NodeOnCreateProcessCallback
 type WCHAR uint16
@@ -498,7 +486,7 @@ type STARTUPINFOW struct {
 	HStdOutput      Handle
 	HStdError       Handle
 }
-type NodeOnCreateProcessCallback func(webView WebView, param uintptr, applicationPath, arguments *WCHAR, startup *STARTUPINFOW)
+type NodeOnCreateProcessCallback func(webView WebView, param uintptr, applicationPath, arguments *WCHAR, startup *STARTUPINFOW) (void uintptr)
 
 // mbLoadingResult 是一个表示加载结果的类型
 type LoadingResult int
@@ -511,7 +499,7 @@ const (
 )
 
 // mbLoadingFinishCallback
-type LoadingFinishCallback func(webView WebView, param uintptr, FrameId WebFrameHandle, URL string, Result LoadingResult, FailedReason string)
+type LoadingFinishCallback func(webView WebView, param uintptr, FrameId WebFrameHandle, URL string, Result LoadingResult, FailedReason string) (void uintptr)
 
 // mbDownloadCallback
 type DownloadCallback func(webView WebView, param uintptr, FrameId WebFrameHandle, URL string, DownloadJob uintptr) bool
@@ -530,43 +518,43 @@ const (
 )
 
 // mbConsoleCallback
-type ConsoleCallback func(webView WebView, param uintptr, level ConsoleLevel, message string, sourceName string, sourceLine uint, stackTrace string)
+type ConsoleCallback func(webView WebView, param uintptr, level ConsoleLevel, message string, sourceName string, sourceLine uint, stackTrace string) (void uintptr)
 
 // mbOnCallUiThread
 // 这是一个在UI线程上调用的函数类型
-type OnCallUiThreadCallback func(webView WebView, param uintptr)
+type OnCallUiThreadCallback func(webView WebView, param uintptr) (void uintptr)
 
 // mbCallUiThread
 // 这是一个用于在UI线程上调用OnCallUiThread的函数类型
-type CallUiThreadCallback func(webView WebView, funcOnUiThread OnCallUiThreadCallback, param uintptr)
+type CallUiThreadCallback func(webView WebView, funcOnUiThread OnCallUiThreadCallback, param uintptr) (void uintptr)
 
 // LoadUrlBeginCallback
 type LoadUrlBeginCallback func(webView WebView, param uintptr, url string, job NetJob) bool
 
 // LoadUrlEndCallback
-type LoadUrlEndCallback func(webView WebView, param uintptr, url string, job NetJob, buf uintptr, len int)
+type LoadUrlEndCallback func(webView WebView, param uintptr, url string, job NetJob, buf uintptr, len int) (void uintptr)
 
 // 注意：buf 参数是一个 unsafe.Pointer，因为 C 中的 void* 在 Go 中没有直接对应。
 // 在实际使用时，你可能需要将其转换为合适的类型（如 []byte）来访问其内容。
 
 // LoadUrlFailCallback
-type LoadUrlFailCallback func(webView WebView, param uintptr, url string, job NetJob)
+type LoadUrlFailCallback func(webView WebView, param uintptr, url string, job NetJob) (void uintptr)
 
 // LoadUrlHeadersReceivedCallback
-type LoadUrlHeadersReceivedCallback func(webView WebView, param uintptr, url string, job NetJob)
+type LoadUrlHeadersReceivedCallback func(webView WebView, param uintptr, url string, job NetJob) (void uintptr)
 
 // LoadUrlFinishCallback
 // 注意：这里使用了 Utf8 类型别名，但在 Go 中直接使用 string 即可，因为 Go 的字符串默认就是 UTF-8 编码的。
-type LoadUrlFinishCallback func(webView WebView, param uintptr, url string, job NetJob, len int)
+type LoadUrlFinishCallback func(webView WebView, param uintptr, url string, job NetJob, len int) (void uintptr)
 
 // mbDidCreateScriptContextCallback
 // type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int)
 
 // mbWillReleaseScriptContextCallback
-type WillReleaseScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, worldId int)
+type WillReleaseScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, worldId int) (void uintptr)
 
 // mbNetGetFaviconCallback
-type NetGetFaviconCallback func(webView WebView, param uintptr, url string, buf *MemBuf)
+type NetGetFaviconCallback func(webView WebView, param uintptr, url string, buf *MemBuf) (void uintptr)
 
 // AsynRequestState 枚举类型
 type AsynRequestState int
@@ -578,10 +566,10 @@ const (
 )
 
 // CanGoBackForwardCallback
-type CanGoBackForwardCallback func(webView WebView, param uintptr, state AsynRequestState, b bool)
+type CanGoBackForwardCallback func(webView WebView, param uintptr, state AsynRequestState, b bool) (void uintptr)
 
 // GetCookieCallback
-type GetCookieCallback func(webView WebView, param uintptr, state AsynRequestState, cookie string)
+type GetCookieCallback func(webView WebView, param uintptr, state AsynRequestState, cookie string) (void uintptr)
 
 // 类型别名定义
 type V8ContextPtr uintptr // v8引擎的上下文指针
@@ -591,7 +579,7 @@ type V8Isolate uintptr    // v8引擎的隔离区指针
 type GetSourceCallback func(webView WebView, param uintptr, mhtml string)
 
 // GetContentAsMarkupCallback
-type GetContentAsMarkupCallback func(webView WebView, param uintptr, content string, size uintptr)
+type GetContentAsMarkupCallback func(webView WebView, param uintptr, content string, size uintptr) (void uintptr)
 
 // 结构体指针类型定义
 type WebUrlRequest struct{}
@@ -601,11 +589,11 @@ type WebUrlResponsePtr *WebUrlResponse
 
 // 回调函数类型定义
 // 注意：Go没有__stdcall调用约定，所以这里省略了它
-type OnUrlRequestWillRedirectCallback func(webView WebView, param uintptr, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr)
-type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, response WebUrlResponsePtr)
-type OnUrlRequestDidReceiveDataCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, data *byte, dataLength int)
-type OnUrlRequestDidFailCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, error *uint8)
-type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, finishTime float64)
+type OnUrlRequestWillRedirectCallback func(webView WebView, param uintptr, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr) (void uintptr)
+type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, response WebUrlResponsePtr) (void uintptr)
+type OnUrlRequestDidReceiveDataCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, data *byte, dataLength int) (void uintptr)
+type OnUrlRequestDidFailCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, error *uint8) (void uintptr)
+type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, finishTime float64) (void uintptr)
 
 // UrlRequestCallbacks 结构体
 type UrlRequestCallbacks struct {
@@ -625,9 +613,9 @@ const (
 )
 
 // 函数指针类型
-type NetJobDataRecvCallback func(ptr uintptr, job NetJob, data *byte, length int)
-type NetJobDataFinishCallback func(ptr uintptr, job NetJob, result LoadingResult)
-type PopupDialogSaveNameCallback func(ptr uintptr, filePath *uint16)
+type NetJobDataRecvCallback func(ptr uintptr, job NetJob, data *byte, length int) (void uintptr)
+type NetJobDataFinishCallback func(ptr uintptr, job NetJob, result LoadingResult) (void uintptr)
+type PopupDialogSaveNameCallback func(ptr uintptr, filePath *uint16) (void uintptr)
 
 // 结构体定义
 type NetJobDataBind struct {
@@ -674,12 +662,12 @@ const (
 
 // DialogOptions 结构体定义了对话框的选项
 type DialogOptions struct {
-	Magic                   int    // 'mbdo'
+	Magic                   int32  // 'mbdo'
 	Title                   string // 标题
 	DefaultPath             string // 默认路径
 	ButtonLabel             string // 按钮标签
 	Filters                 *FileFilter
-	FiltersCount            int
+	FiltersCount            int32
 	Prop                    DialogProperties
 	Message                 string // 消息
 	SecurityScopedBookmarks bool
@@ -687,7 +675,7 @@ type DialogOptions struct {
 
 // DownloadOptions 结构体定义了下载选项
 type DownloadOptions struct {
-	Magic             int
+	Magic             int32
 	SaveAsPathAndName bool
 }
 
@@ -705,26 +693,26 @@ type DownloadInBlinkThreadCallback func(
 
 // mbPdfDatas 结构体
 type PdfDatas struct {
-	Count int
+	Count int32
 	Sizes *uintptr  // 指向 uintptr 类型的指针数组
 	Datas **uintptr // 指向 void* 类型的指针的指针数组，即 const void**
 }
 
 // PrintPdfDataCallback 函数指针类型
-type PrintPdfDataCallback func(webview WebView, param uintptr, datas *PdfDatas)
+type PrintPdfDataCallback func(webview WebView, param uintptr, datas *PdfDatas) (void uintptr)
 
 // ScreenshotSettings 结构体
 type ScreenshotSettings struct {
-	StructSize int
-	Width      int
-	Height     int
+	StructSize int32
+	Width      int32
+	Height     int32
 }
 
 // PrintBitmapCallback 函数指针类型
-type PrintBitmapCallback func(webview WebView, param uintptr, data *byte, size uintptr)
+type PrintBitmapCallback func(webview WebView, param uintptr, data *byte, size uintptr) (void uintptr)
 
 // OnScreenshot 函数指针类型
-type OnScreenshotCallback func(webView WebView, param uintptr, data *byte, size uintptr)
+type OnScreenshotCallback func(webView WebView, param uintptr, data *byte, size uintptr) (void uintptr)
 
 // 枚举 mbHttBodyElementType
 type HttBodyElementType int
@@ -736,7 +724,7 @@ const (
 
 // 结构体 PostBodyElement
 type PostBodyElement struct {
-	Size       int
+	Size       int32
 	Type       HttBodyElementType
 	Data       *MemBuf // 假设 MemBuf 已经被定义
 	FilePath   StringPtr
@@ -746,7 +734,7 @@ type PostBodyElement struct {
 
 // PostBodyElements 结构体
 type PostBodyElements struct {
-	Size        int
+	Size        int32
 	Element     **PostBodyElement
 	ElementSize uintptr
 	IsDirty     bool
@@ -757,7 +745,7 @@ type WillSendRequestInfo struct {
 	URL              StringPtr
 	NewURL           StringPtr
 	ResourceType     ResourceType
-	HTTPResponseCode int
+	HTTPResponseCode int32
 	Method           StringPtr
 	Referrer         StringPtr
 	Headers          uintptr // 使用unsafe.Pointer来替代void*
@@ -778,7 +766,7 @@ const (
 
 // mbViewLoadCallbackInfo 结构体
 type ViewLoadCallbackInfo struct {
-	Size                int
+	Size                int32
 	Frame               WebFrameHandle
 	WillSendRequestInfo *WillSendRequestInfo
 	URL                 string
@@ -787,7 +775,7 @@ type ViewLoadCallbackInfo struct {
 }
 
 // mbNetViewLoadInfoCallback 函数指针类型
-type NetViewLoadInfoCallback func(webView WebView, param uintptr, type_ ViewLoadType, info *ViewLoadCallbackInfo)
+type NetViewLoadInfoCallback func(webView WebView, param uintptr, type_ ViewLoadType, info *ViewLoadCallbackInfo) (void uintptr)
 
 // mbwindow-----------------------------------------------------------------------------------
 // mbWindowType 枚举
@@ -818,10 +806,10 @@ type DraggableRegion struct {
 
 // 回调函数类型
 type WindowClosingCallback func(webview WebView, param uintptr) bool
-type WindowDestroyCallback func(webview WebView, param uintptr)
+type WindowDestroyCallback func(webview WebView, param uintptr) (void uintptr)
 
 // mbDraggableRegionsChangedCallback 回调函数类型
-type DraggableRegionsChangedCallback func(webview WebView, param uintptr, rects *DraggableRegion, rectCount int)
+type DraggableRegionsChangedCallback func(webview WebView, param uintptr, rects *DraggableRegion, rectCount int) (void uintptr)
 
 // mbPrintintStep 枚举（注意：这里可能有个拼写错误，应该是 mbPrintStep）
 type PrintintStep int
@@ -834,9 +822,9 @@ const (
 
 // mbPrintintSettings 结构体
 type PrintintSettings struct {
-	Dpi    int
-	Width  int
-	Height int
+	Dpi    int32
+	Width  int32
+	Height int32
 	Scale  float32
 }
 

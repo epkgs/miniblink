@@ -1,21 +1,19 @@
 package wke
 
-import "unsafe"
-
 type Rect struct {
-	X, Y, W, H int
+	X, Y, W, H int32
 }
 
 // wkePoint 结构体
 type Point struct {
-	X int
-	Y int
+	X int32
+	Y int32
 }
 
 // wkeSize 结构体
 type Size struct {
-	W int
-	H int
+	W int32
+	H int32
 }
 
 // MouseFlags 位标志类型
@@ -54,7 +52,7 @@ const (
 	MSG_MOUSEWHEEL    MouseMsg = 0x020A
 )
 
-// JsExecState 定义为void*的别名，在Go中通常使用unsafe.Pointer
+// JsExecState 定义为void*的别名，在Go中通常使用uintptr
 type JsExecState uintptr
 
 type JsValue uintptr
@@ -65,7 +63,7 @@ type WebView uintptr
 
 // _tagWkeString 结构体定义
 // type _tagWkeString struct{}
-type String uintptr
+type WkeString uintptr
 
 // type _tagWkeMediaPlayer struct{}
 type MediaPlayer uintptr
@@ -79,7 +77,7 @@ type MediaPlayerClient uintptr
 type blinkWebURLRequestPtr uintptr
 
 // 枚举类型通常使用int来表示
-type ProxyType int
+type ProxyType int32
 
 const (
 	PROXY_NONE ProxyType = iota
@@ -116,7 +114,7 @@ type Settings struct {
 
 // 另一个结构体
 type ViewSettings struct {
-	Size    int
+	Size    int32
 	BgColor uint32
 }
 
@@ -135,11 +133,11 @@ type GeolocationPosition struct {
 	Speed                    float64
 }
 
-// 对于void*类型的WkeWebFrameHandle，在Go中通常使用unsafe.Pointer来表示
-type WebFrameHandle unsafe.Pointer
+// 对于void*类型的WkeWebFrameHandle，在Go中通常使用uintptr来表示
+type WebFrameHandle uintptr
 
 // 枚举类型通常使用int来表示
-type MenuItemId int
+type MenuItemId int32
 
 const (
 	MenuSelectedAllId      MenuItemId = 1 << 1
@@ -157,18 +155,18 @@ const (
 )
 
 // 文件操作函数类型
-type FILE_OPEN func(path string) unsafe.Pointer
-type FILE_CLOSE func(handle unsafe.Pointer)
-type FILE_SIZE func(handle unsafe.Pointer) uintptr
-type FILE_READ func(handle unsafe.Pointer, buffer unsafe.Pointer, size uintptr) int
-type FILE_SEEK func(handle unsafe.Pointer, offset int, origin int) int
+type FILE_OPEN func(path string) (void uintptr)
+type FILE_CLOSE func(handle uintptr) (void uintptr)
+type FILE_SIZE func(handle uintptr) (size uintptr)
+type FILE_READ func(handle uintptr, buffer uintptr, size uintptr) int32
+type FILE_SEEK func(handle uintptr, offset int, origin int) int32
 
 // 文件存在检查函数类型
 type EXISTS_FILE func(path string) bool
 
 // 回调函数类型
-type ON_TITLE_CHANGED func(clientHandler *ClientHandler, title String)
-type ON_URL_CHANGED func(clientHandler *ClientHandler, url String)
+type ON_TITLE_CHANGED func(clientHandler *ClientHandler, title WkeString) (void uintptr)
+type ON_URL_CHANGED func(clientHandler *ClientHandler, url WkeString) (void uintptr)
 
 // 客户端处理结构
 type ClientHandler struct {
@@ -178,14 +176,14 @@ type ClientHandler struct {
 
 // 访问cookie的函数类型
 type CookieVisitor func(
-	params unsafe.Pointer,
+	params uintptr,
 	name, value, domain, path *byte, // 注意：在Go中通常使用*byte来表示C中的char*
-	secure, httpOnly int,
-	expires *int, // 注意：在Go中我们使用*int来接收一个可能被修改的指针参数
+	secure, httpOnly int32,
+	expires *int32, // 注意：在Go中我们使用*int来接收一个可能被修改的指针参数
 ) bool
 
 // 枚举类型在Go中通常用int来表示
-type CookieCommand int
+type CookieCommand int32
 
 const (
 	CookieCommandClearAllCookies CookieCommand = iota
@@ -194,7 +192,7 @@ const (
 	CookieCommandReloadCookiesFromFile
 )
 
-type NavigationType int
+type NavigationType int32
 
 const (
 	NAVIGATION_TYPE_LINKCLICK    NavigationType = iota
@@ -205,7 +203,7 @@ const (
 	NAVIGATION_TYPE_OTHER
 )
 
-type CursorInfoType int
+type CursorInfoType int32
 
 const (
 	CursorInfoPointer CursorInfoType = iota
@@ -256,10 +254,10 @@ const (
 
 // 结构体类型在Go中直接使用struct关键字定义
 type WindowFeatures struct {
-	X                  int
-	Y                  int
-	Width              int
-	Height             int
+	X                  int32
+	Y                  int32
+	Width              int32
+	Height             int32
 	MenuBarVisible     bool
 	StatusBarVisible   bool
 	ToolBarVisible     bool
@@ -269,18 +267,18 @@ type WindowFeatures struct {
 	Fullscreen         bool
 }
 
-type StorageType int
+type StorageType int32
 
 const (
-	StorageTypeString         StorageType = iota // String data with an associated MIME type. Depending on the MIME type, there may be optional metadata attributes as well.
+	StorageTypeString         StorageType = iota // WkeString data with an associated MIME type. Depending on the MIME type, there may be optional metadata attributes as well.
 	StorageTypeFilename                          // Stores the name of one file being dragged into the renderer.
 	StorageTypeBinaryData                        // An image being dragged out of the renderer. Contains a buffer holding the image data as well as the suggested name for saving the image to.
 	StorageTypeFileSystemFile                    // Stores the filesystem URL of one file being dragged into the renderer.
 )
 
 type MemBuf struct {
-	unuse  int
-	data   unsafe.Pointer
+	unuse  int32
+	data   uintptr
 	length uintptr // Note: using uintptr for uintptr
 }
 
@@ -299,8 +297,8 @@ type WebDragDataItem struct {
 
 type WebDragData struct {
 	ItemList         *WebDragDataItem
-	ItemListLength   int
-	ModifierKeyState int // State of Shift/Ctrl/Alt/Meta keys.
+	ItemListLength   int32
+	ModifierKeyState int32 // State of Shift/Ctrl/Alt/Meta keys.
 	FilesystemId     *MemBuf
 }
 
@@ -316,7 +314,7 @@ const (
 	WebDragOperationEvery   WebDragOperationsMask = 0xffffffff
 )
 
-type ResourceType int
+type ResourceType int32
 
 const (
 	RESOURCE_TYPE_MAIN_FRAME     ResourceType = iota // top level page
@@ -339,16 +337,16 @@ const (
 )
 
 type WillSendRequestInfo struct {
-	Url              String
-	NewUrl           String
+	Url              WkeString
+	NewUrl           WkeString
 	ResourceType     ResourceType
-	HttpResponseCode int
-	Method           String
-	Referrer         String
-	Headers          unsafe.Pointer // void*在Go中通常转换为unsafe.Pointer
+	HttpResponseCode int32
+	Method           WkeString
+	Referrer         WkeString
+	Headers          uintptr // void*在Go中通常转换为uintptr
 }
 
-type HttBodyElementType int
+type HttBodyElementType int32
 
 const (
 	HttBodyElementTypeData HttBodyElementType = iota
@@ -356,21 +354,21 @@ const (
 )
 
 type PostBodyElement struct {
-	Size       int
+	Size       int32
 	Type       HttBodyElementType
 	Data       *MemBuf // 假设WkeMemBuf*是指向WkeMemBuf的指针
-	FilePath   String
+	FilePath   WkeString
 	FileStart  int64 // __int64在Go中通常为int64
 	FileLength int64 // -1 means to the end of the file.
 }
 
 type PostBodyElements struct {
-	Size        int
+	Size        int32
 	Element     **PostBodyElement
 	ElementSize uintptr // size_t在Go中通常为uintptr
 	IsDirty     bool
 }
-type NetJob unsafe.Pointer
+type NetJob uintptr
 
 type Slist struct {
 	Data *byte
@@ -378,7 +376,7 @@ type Slist struct {
 }
 
 type TempCallbackInfo struct {
-	Size                int
+	Size                int32
 	Frame               WebFrameHandle
 	WillSendRequestInfo *WillSendRequestInfo
 	Url                 string
@@ -386,7 +384,7 @@ type TempCallbackInfo struct {
 	Job                 NetJob
 }
 
-type RequestType int
+type RequestType int32
 
 const (
 	RequestTypeInvalidation RequestType = iota
@@ -396,30 +394,32 @@ const (
 )
 
 type PdfDatas struct {
-	Count int
+	Count int32
 	Sizes *uintptr
-	Datas **unsafe.Pointer
+	Datas **uintptr
 }
 
+type BOOL int32
+
 type PrintSettings struct {
-	StructSize               int
-	Dpi                      int
-	Width                    int // in px
-	Height                   int
-	MarginTop                int
-	MarginBottom             int
-	MarginLeft               int
-	MarginRight              int
-	IsPrintPageHeadAndFooter bool
-	IsPrintBackgroud         bool
-	IsLandscape              bool
-	IsPrintToMultiPage       bool
+	StructSize               int32
+	Dpi                      int32
+	Width                    int32 // in px
+	Height                   int32
+	MarginTop                int32
+	MarginBottom             int32
+	MarginLeft               int32
+	MarginRight              int32
+	IsPrintPageHeadAndFooter BOOL
+	IsPrintBackgroud         BOOL
+	IsLandscape              BOOL
+	IsPrintToMultiPage       BOOL
 }
 
 type ScreenshotSettings struct {
-	StructSize int
-	Width      int
-	Height     int
+	StructSize int32
+	Width      int32
+	Height     int32
 }
 
 type HDC uintptr
@@ -456,74 +456,74 @@ type STARTUPINFOW struct {
 type COLORREF DWORD
 
 // wkeCaretChangedCallback
-type CaretChangedCallback func(webView WebView, param unsafe.Pointer, r *Rect)
+type CaretChangedCallback func(webView WebView, param uintptr, r *Rect) (void uintptr)
 
 // wkeTitleChangedCallback
-type TitleChangedCallback func(webView WebView, param unsafe.Pointer, title String)
+type TitleChangedCallback func(webView WebView, param uintptr, title WkeString) (void uintptr)
 
 // wkeURLChangedCallback
-type URLChangedCallback func(webView WebView, param unsafe.Pointer, url String)
+type URLChangedCallback func(webView WebView, param uintptr, url WkeString) (void uintptr)
 
 // wkeURLChangedCallback2
-type URLChangedCallback2 func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, url String)
+type URLChangedCallback2 func(webView WebView, param uintptr, frameId WebFrameHandle, url WkeString) (void uintptr)
 
 // wkePaintUpdatedCallback
-type PaintUpdatedCallback func(webView WebView, param unsafe.Pointer, hdc HDC, x, y, cx, cy int)
+type PaintUpdatedCallback func(webView WebView, param uintptr, hdc HDC, x, y, cx, cy int32) (void uintptr)
 
 // wkePaintBitUpdatedCallback
-type PaintBitUpdatedCallback func(webView WebView, param unsafe.Pointer, buffer unsafe.Pointer, r *Rect, width, height int)
+type PaintBitUpdatedCallback func(webView WebView, param uintptr, buffer uintptr, r *Rect, width, height int32) (void uintptr)
 
 // wkeAlertBoxCallback
-type AlertBoxCallback func(webView WebView, param unsafe.Pointer, msg String)
+type AlertBoxCallback func(webView WebView, param uintptr, msg WkeString) (void uintptr)
 
 // wkeConfirmBoxCallback
-type ConfirmBoxCallback func(webView WebView, param unsafe.Pointer, msg String) bool
+type ConfirmBoxCallback func(webView WebView, param uintptr, msg WkeString) bool
 
 // wkePromptBoxCallback
-type PromptBoxCallback func(webView WebView, param unsafe.Pointer, msg, defaultResult String) (result String, ok bool)
+type PromptBoxCallback func(webView WebView, param uintptr, msg, defaultResult WkeString) (result WkeString, ok bool)
 
 // wkeNavigationCallback
-type NavigationCallback func(webView WebView, param unsafe.Pointer, navigationType NavigationType, url String) bool
+type NavigationCallback func(webView WebView, param uintptr, navigationType NavigationType, url WkeString) bool
 
 // wkeCreateViewCallback
-type CreateViewCallback func(webView WebView, param unsafe.Pointer, navigationType NavigationType, url String, windowFeatures *WindowFeatures) WebView
+type CreateViewCallback func(webView WebView, param uintptr, navigationType NavigationType, url WkeString, windowFeatures *WindowFeatures) WebView
 
 // wkeDocumentReadyCallback
-type DocumentReadyCallback func(webView WebView, param unsafe.Pointer)
+type DocumentReadyCallback func(webView WebView, param uintptr) (void uintptr)
 
 // wkeDocumentReady2Callback
-type DocumentReady2Callback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle)
+type DocumentReady2Callback func(webView WebView, param uintptr, frameId WebFrameHandle) (void uintptr)
 
-type OnShowDevtoolsCallback func(webView WebView, param unsafe.Pointer)
+type OnShowDevtoolsCallback func(webView WebView, param uintptr) (void uintptr)
 
-type NodeOnCreateProcessCallback func(webView WebView, param unsafe.Pointer, applicationPath *uint16, arguments *uint16, startup *STARTUPINFOW)
-type OnPluginFindCallback func(webView WebView, param unsafe.Pointer, mime *byte, initializeFunc unsafe.Pointer, getEntryPointsFunc unsafe.Pointer, shutdownFunc unsafe.Pointer)
+type NodeOnCreateProcessCallback func(webView WebView, param uintptr, applicationPath *uint16, arguments *uint16, startup *STARTUPINFOW) (void uintptr)
+type OnPluginFindCallback func(webView WebView, param uintptr, mime *byte, initializeFunc uintptr, getEntryPointsFunc uintptr, shutdownFunc uintptr) (void uintptr)
 
-type OnPrintCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, printParams unsafe.Pointer)
-type OnScreenshotCallback func(webView WebView, param unsafe.Pointer, data *byte, size uintptr)
+type OnPrintCallback func(webView WebView, param uintptr, frameId WebFrameHandle, printParams uintptr) (void uintptr)
+type OnScreenshotCallback func(webView WebView, param uintptr, data *byte, size uintptr) (void uintptr)
 
-type ImageBufferToDataURL func(webView WebView, param unsafe.Pointer, data *byte, size uintptr) String
+type ImageBufferToDataURL func(webView WebView, param uintptr, data *byte, size uintptr) WkeString
 
 type MediaLoadInfo struct {
-	Size     int
-	Width    int
-	Height   int
+	Size     int32
+	Width    int32
+	Height   int32
 	Duration float64
 }
-type WillMediaLoadCallback func(webView WebView, param unsafe.Pointer, url *byte, info *MediaLoadInfo)
+type WillMediaLoadCallback func(webView WebView, param uintptr, url *byte, info *MediaLoadInfo) (void uintptr)
 
 type StartDraggingCallback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	frame WebFrameHandle,
 	data *WebDragData,
 	mask WebDragOperationsMask,
-	image unsafe.Pointer,
+	image uintptr,
 	dragImageOffset *Point,
 )
 
-type UiThreadRunCallback func(hWnd HWND, param unsafe.Pointer)
-type UiThreadPostTaskCallback func(hWnd HWND, callback UiThreadRunCallback, param unsafe.Pointer) int
+type UiThreadRunCallback func(hWnd HWND, param uintptr) (void uintptr)
+type UiThreadPostTaskCallback func(hWnd HWND, callback UiThreadRunCallback, param uintptr) int
 
 type OtherLoadType int
 
@@ -537,7 +537,7 @@ const (
 	DID_POST_REQUEST
 )
 
-type OnOtherLoadCallback func(webView WebView, param unsafe.Pointer, type_ OtherLoadType, info *TempCallbackInfo)
+type OnOtherLoadCallback func(webView WebView, param uintptr, type_ OtherLoadType, info *TempCallbackInfo) (void uintptr)
 
 type OnContextMenuItemClickType int
 
@@ -552,11 +552,11 @@ const (
 
 type OnContextMenuItemClickCallback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	type_ OnContextMenuItemClickType,
 	step OnContextMenuItemClickStep,
 	frameId WebFrameHandle,
-	info unsafe.Pointer,
+	info uintptr,
 ) bool
 
 type LoadingResult int
@@ -574,19 +574,19 @@ const (
 	kWkeDownloadOptCacheData
 )
 
-type NetJobDataRecvCallback func(ptr unsafe.Pointer, job NetJob, data *byte, length int)
-type NetJobDataFinishCallback func(ptr unsafe.Pointer, job NetJob, result LoadingResult)
+type NetJobDataRecvCallback func(ptr uintptr, job NetJob, data *byte, length int) (void uintptr)
+type NetJobDataFinishCallback func(ptr uintptr, job NetJob, result LoadingResult) (void uintptr)
 
 type NetJobDataBind struct {
-	Param          unsafe.Pointer
+	Param          uintptr
 	RecvCallback   NetJobDataRecvCallback
 	FinishCallback NetJobDataFinishCallback
 }
 
-type PopupDialogSaveNameCallback func(ptr unsafe.Pointer, filePath *uint16)
+type PopupDialogSaveNameCallback func(ptr uintptr, filePath *uint16) (void uintptr)
 
 type DownloadBind struct {
-	Param            unsafe.Pointer
+	Param            uintptr
 	RecvCallback     NetJobDataRecvCallback
 	FinishCallback   NetJobDataFinishCallback
 	SaveNameCallback PopupDialogSaveNameCallback
@@ -612,12 +612,12 @@ type FileFilter struct {
 }
 
 type DialogOptions struct {
-	Magic                   int
+	Magic                   int32
 	Title                   string
 	DefaultPath             string
 	ButtonLabel             string
 	Filters                 *FileFilter
-	FiltersCount            int
+	FiltersCount            int32
 	Prop                    DialogProperties
 	Message                 string
 	SecurityScopedBookmarks bool
@@ -625,7 +625,7 @@ type DialogOptions struct {
 
 type DownloadInBlinkThreadCallback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	expectedContentLength uintptr,
 	url string,
 	mime string,
@@ -636,21 +636,21 @@ type DownloadInBlinkThreadCallback func(
 
 type LoadingFinishCallback func(
 	webView WebView,
-	param unsafe.Pointer,
-	url String,
+	param uintptr,
+	url WkeString,
 	result LoadingResult,
-	failedReason String,
+	failedReason WkeString,
 )
 
 type DownloadCallback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	url string,
 ) bool
 
 type Download2Callback func(
 	webView WebView,
-	param unsafe.Pointer,
+	param uintptr,
 	expectedContentLength uintptr,
 	url string,
 	mime string,
@@ -671,12 +671,12 @@ const (
 	LevelLast         ConsoleLevel = LevelInfo
 )
 
-type ConsoleCallback func(webView WebView, param unsafe.Pointer, level ConsoleLevel, message String, sourceName String, sourceLine uint, stackTrace String)
+type ConsoleCallback func(webView WebView, param uintptr, level ConsoleLevel, message WkeString, sourceName WkeString, sourceLine uint, stackTrace WkeString) (void uintptr)
 
-type OnCallUiThread func(webView WebView, paramOnInThread unsafe.Pointer)
-type CallUiThread func(webView WebView, func_ OnCallUiThread, param unsafe.Pointer)
+type OnCallUiThread func(webView WebView, paramOnInThread uintptr) (void uintptr)
+type CallUiThread func(webView WebView, func_ OnCallUiThread, param uintptr) (void uintptr)
 
-type MediaPlayerFactory func(webView WebView, client MediaPlayerClient, npBrowserFuncs unsafe.Pointer, npPluginFuncs unsafe.Pointer) MediaPlayer
+type MediaPlayerFactory func(webView WebView, client MediaPlayerClient, npBrowserFuncs uintptr, npPluginFuncs uintptr) MediaPlayer
 type OnIsMediaPlayerSupportsMIMEType func(mime string) bool
 
 // wkeNet
@@ -685,11 +685,11 @@ type WebUrlRequestPtr *WebUrlRequest
 type WebUrlResponse struct{}
 type WebUrlResponsePtr *WebUrlResponse
 
-type OnUrlRequestWillRedirectCallback func(webView WebView, param unsafe.Pointer, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr)
-type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, response WebUrlResponsePtr)
-type OnUrlRequestDidReceiveDataCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, data *byte, dataLength int)
-type OnUrlRequestDidFailCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, error string)
-type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param unsafe.Pointer, request WebUrlRequestPtr, finishTime float64)
+type OnUrlRequestWillRedirectCallback func(webView WebView, param uintptr, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr) (void uintptr)
+type OnUrlRequestDidReceiveResponseCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, response WebUrlResponsePtr) (void uintptr)
+type OnUrlRequestDidReceiveDataCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, data *byte, dataLength int) (void uintptr)
+type OnUrlRequestDidFailCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, error string) (void uintptr)
+type OnUrlRequestDidFinishLoadingCallback func(webView WebView, param uintptr, request WebUrlRequestPtr, finishTime float64) (void uintptr)
 
 type UrlRequestCallbacks struct {
 	WillRedirectCallback       OnUrlRequestWillRedirectCallback
@@ -699,19 +699,19 @@ type UrlRequestCallbacks struct {
 	DidFinishLoadingCallback   OnUrlRequestDidFinishLoadingCallback
 }
 
-type LoadUrlBeginCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob) bool
-type LoadUrlEndCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob, buf unsafe.Pointer, len int)
-type LoadUrlFailCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob)
-type LoadUrlHeadersReceivedCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob)
-type LoadUrlFinishCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob, len int)
+type LoadUrlBeginCallback func(webView WebView, param uintptr, url string, job NetJob) bool
+type LoadUrlEndCallback func(webView WebView, param uintptr, url string, job NetJob, buf uintptr, len int) (void uintptr)
+type LoadUrlFailCallback func(webView WebView, param uintptr, url string, job NetJob) (void uintptr)
+type LoadUrlHeadersReceivedCallback func(webView WebView, param uintptr, url string, job NetJob) (void uintptr)
+type LoadUrlFinishCallback func(webView WebView, param uintptr, url string, job NetJob, len int) (void uintptr)
 
-type DidCreateScriptContextCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, context unsafe.Pointer, extensionGroup int, worldId int)
-type WillReleaseScriptContextCallback func(webView WebView, param unsafe.Pointer, frameId WebFrameHandle, context unsafe.Pointer, worldId int)
-type NetResponseCallback func(webView WebView, param unsafe.Pointer, url string, job NetJob) bool
-type OnNetGetFaviconCallback func(webView WebView, param unsafe.Pointer, url string, buf *MemBuf)
+type DidCreateScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup int, worldId int) (void uintptr)
+type WillReleaseScriptContextCallback func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, worldId int) (void uintptr)
+type NetResponseCallback func(webView WebView, param uintptr, url string, job NetJob) bool
+type OnNetGetFaviconCallback func(webView WebView, param uintptr, url string, buf *MemBuf) (void uintptr)
 
-type V8ContextPtr unsafe.Pointer
-type V8Isolate unsafe.Pointer
+type V8ContextPtr uintptr
+type V8Isolate uintptr
 
 // wke window
 type WindowType int
@@ -723,32 +723,32 @@ const (
 )
 
 type WindowCreateInfo struct {
-	Size    int
+	Size    int32
 	Parent  HWND
 	Style   DWORD
 	StyleEx DWORD
-	X       int
-	Y       int
-	Width   int
-	Height  int
+	X       int32
+	Y       int32
+	Width   int32
+	Height  int32
 	Color   COLORREF
 }
 
 type DefaultPrinterSettings struct {
-	StructSize         int
+	StructSize         int32
 	IsLandscape        bool
 	IsPrintHeadFooter  bool
 	IsPrintBackgroud   bool
-	EdgeDistanceLeft   int
-	EdgeDistanceTop    int
-	EdgeDistanceRight  int
-	EdgeDistanceBottom int
-	Copies             int
-	PaperType          int
+	EdgeDistanceLeft   int32
+	EdgeDistanceTop    int32
+	EdgeDistanceRight  int32
+	EdgeDistanceBottom int32
+	Copies             int32
+	PaperType          int32
 }
 
-type WindowClosingCallback func(webWindow WebView, param unsafe.Pointer) bool
-type WindowDestroyCallback func(webWindow WebView, param unsafe.Pointer)
+type WindowClosingCallback func(webWindow WebView, param uintptr) bool
+type WindowDestroyCallback func(webWindow WebView, param uintptr) (void uintptr)
 
 type RECT struct {
 	Left   int32
@@ -761,7 +761,7 @@ type DraggableRegion struct {
 	Bounds    RECT
 	Draggable bool
 }
-type DraggableRegionsChangedCallback func(webView WebView, param unsafe.Pointer, rects *DraggableRegion, rectCount int)
+type DraggableRegionsChangedCallback func(webView WebView, param uintptr, rects *DraggableRegion, rectCount int)
 
 type JsType int
 
@@ -780,7 +780,7 @@ const (
 type JsGetPropertyCallback func(es JsExecState, object JsValue, propertyName *byte) JsValue
 type JsSetPropertyCallback func(es JsExecState, object JsValue, propertyName *byte, value JsValue) bool
 type JsCallAsFunctionCallback func(es JsExecState, object JsValue, args *[]JsValue, argCount int) JsValue
-type JsFinalizeCallback func(data *JsData)
+type JsFinalizeCallback func(data *JsData) (void uintptr)
 
 type JsData struct {
 	TypeName       [100]byte
@@ -794,11 +794,11 @@ type JsExceptionInfo struct {
 	Message            string
 	SourceLine         string
 	ScriptResourceName string
-	LineNumber         int
-	StartPosition      int
-	EndPosition        int
-	StartColumn        int
-	EndColumn          int
+	LineNumber         int32
+	StartPosition      int32
+	EndPosition        int32
+	StartColumn        int32
+	EndColumn          int32
 	CallstackString    string
 }
 
@@ -811,7 +811,7 @@ type WPARAM uintptr
 type LPARAM uintptr
 type LRESULT uintptr
 
-type wkeJsNativeFunction func(es JsExecState, param unsafe.Pointer) JsValue
+type wkeJsNativeFunction func(es JsExecState, param uintptr) JsValue
 type wkeShutdown func()
 type wkeShutdownForDebug func() // 测试使用，不了解千万别用！
 type wkeVersion func() uint
@@ -855,9 +855,9 @@ type jsToString func(es JsExecState, v JsValue) string
 type jsToStringW func(es JsExecState, v JsValue) []uint16
 type wkeSetViewSettings func(webView WebView, settings *ViewSettings)
 type wkeSetDebugConfig func(webView WebView, debugString string, param string)
-type wkeToString func(wkeStr String) string
-type wkeToStringW func(wkeStr String) []uint16
-type wkeGetDebugConfig func(webView WebView, debugString string) unsafe.Pointer // 假设返回void*对应Go的unsafe.Pointer
+type wkeToString func(wkeStr WkeString) string
+type wkeToStringW func(wkeStr WkeString) []uint16
+type wkeGetDebugConfig func(webView WebView, debugString string) uintptr // 假设返回void*对应Go的uintptr
 type wkeIsInitialize func() bool
 type wkeFinalize func()
 type wkeUpdate func()
@@ -890,7 +890,7 @@ type wkeSetTransparent func(webView WebView, transparent bool)
 type wkeSetUserAgent func(webView WebView, userAgent string)
 type wkeSetUserAgentW func(webView WebView, userAgent []uint16)
 type wkeSetHandleOffset func(webView WebView, x int, y int)
-type wkeShowDevtools func(webView WebView, path []uint16, callback OnShowDevtoolsCallback, param unsafe.Pointer) // 假设使用unsafe.Pointer表示void*
+type wkeShowDevtools func(webView WebView, path []uint16, callback OnShowDevtoolsCallback, param uintptr) // 假设使用uintptr表示void*
 type wkeLoadW func(webView WebView, url []uint16)
 type wkeLoadURL func(webView WebView, url string)
 type wkeLoadURLW func(webView WebView, url []uint16)
@@ -916,7 +916,7 @@ type wkeGetWebviewId func(webView WebView) int
 type wkeIsWebviewAlive func(id int) bool
 type wkeIsWebviewValid func(webView WebView) bool
 type wkeGetDocumentCompleteURL func(webView WebView, frameId WebFrameHandle, partialURL string) string
-type wkeCreateMemBuf func(webView WebView, buf unsafe.Pointer, length uintptr) *MemBuf
+type wkeCreateMemBuf func(webView WebView, buf uintptr, length uintptr) *MemBuf
 type wkeFreeMemBuf func(buf *MemBuf)
 type wkeGetTitle func(webView WebView) string
 type wkeGetTitleW func(webView WebView) []uint16
@@ -929,8 +929,8 @@ type wkeSetDirty func(webView WebView, dirty bool)
 type wkeIsDirty func(webView WebView) bool
 type wkeAddDirtyArea func(webView WebView, x int, y int, w int, h int)
 type wkeLayoutIfNeeded func(webView WebView)
-type wkePaint2 func(webView WebView, bits unsafe.Pointer, bufWid int, bufHei int, xDst int, yDst int, w int, h int, xSrc int, ySrc int, bCopyAlpha bool)
-type wkePaint func(webView WebView, bits unsafe.Pointer, pitch int)
+type wkePaint2 func(webView WebView, bits uintptr, bufWid int, bufHei int, xDst int, yDst int, w int, h int, xSrc int, ySrc int, bCopyAlpha bool)
+type wkePaint func(webView WebView, bits uintptr, pitch int)
 type wkeRepaintIfNeeded func(webView WebView)
 type wkeGetViewDC func(webView WebView) HDC
 type wkeUnlockViewDC func(webView WebView)
@@ -952,7 +952,7 @@ type wkeEditorRedo func(webView WebView)
 type wkeGetCookieW func(webView WebView) []uint16
 type wkeGetCookie func(webView WebView) string
 type wkeSetCookie func(webView WebView, url string, cookie string)
-type wkeVisitAllCookie func(webView WebView, params unsafe.Pointer, visitor CookieVisitor)
+type wkeVisitAllCookie func(webView WebView, params uintptr, visitor CookieVisitor)
 type wkePerformCookieCommand func(webView WebView, command CookieCommand)
 type wkeSetCookieEnabled func(webView WebView, enable bool)
 type wkeIsCookieEnabled func(webView WebView) bool
@@ -985,62 +985,62 @@ type wkeSetZoomFactor func(webView WebView, factor float32)
 type wkeGetZoomFactor func(webView WebView) float32
 type wkeEnableHighDPISupport func()
 type wkeSetEditable func(webView WebView, editable bool)
-type wkeGetString func(wkeStr String) string
-type wkeGetStringW func(wkeStr String) []uint16
-type wkeSetString func(wkeStr String, str *byte, len uintptr)
-type wkeSetStringWithoutNullTermination func(wkeStr String, str *byte, len uintptr)
-type wkeSetStringW func(wkeStr String, str *uint16, len uintptr)
-type wkeCreateString func(str *byte, len uintptr) String
-type wkeCreateStringW func(str *uint16, len uintptr) String
-type wkeCreateStringWithoutNullTermination func(str *byte, len uintptr) String
-type wkeGetStringLen func(wkeStr String) uintptr
-type wkeDeleteString func(wkeStr String)
+type wkeGetString func(wkeStr WkeString) string
+type wkeGetStringW func(wkeStr WkeString) []uint16
+type wkeSetString func(wkeStr WkeString, str *byte, len uintptr)
+type wkeSetStringWithoutNullTermination func(wkeStr WkeString, str *byte, len uintptr)
+type wkeSetStringW func(wkeStr WkeString, str *uint16, len uintptr)
+type wkeCreateString func(str *byte, len uintptr) WkeString
+type wkeCreateStringW func(str *uint16, len uintptr) WkeString
+type wkeCreateStringWithoutNullTermination func(str *byte, len uintptr) WkeString
+type wkeGetStringLen func(wkeStr WkeString) uintptr
+type wkeDeleteString func(wkeStr WkeString)
 type wkeGetWebViewForCurrentContext func() WebView
-type wkeSetUserKeyValue func(webView WebView, key string, value unsafe.Pointer)
-type wkeGetUserKeyValue func(webView WebView, key string) unsafe.Pointer
+type wkeSetUserKeyValue func(webView WebView, key string, value uintptr)
+type wkeGetUserKeyValue func(webView WebView, key string) uintptr
 type wkeGetCursorInfoType func(webView WebView) int
 type wkeSetCursorInfoType func(webView WebView, type_ int)
-type wkeSetDragFiles func(webView WebView, clintPos *Point, screenPos *Point, files *String, filesCount int)
+type wkeSetDragFiles func(webView WebView, clintPos *Point, screenPos *Point, files *WkeString, filesCount int)
 type wkeSetDeviceParameter func(webView WebView, device string, paramStr string, paramInt int, paramFloat float32)
 type wkeGetTempCallbackInfo func(webView WebView) *TempCallbackInfo
-type wkeOnCaretChanged func(webView WebView, callback CaretChangedCallback, callbackParam unsafe.Pointer)
-type wkeOnMouseOverUrlChanged func(webView WebView, callback TitleChangedCallback, callbackParam unsafe.Pointer)
-type wkeOnTitleChanged func(webView WebView, callback TitleChangedCallback, callbackParam unsafe.Pointer)
-type wkeOnURLChanged func(webView WebView, callback URLChangedCallback, callbackParam unsafe.Pointer)
-type wkeOnURLChanged2 func(webView WebView, callback URLChangedCallback2, callbackParam unsafe.Pointer)
-type wkeOnPaintUpdated func(webView WebView, callback PaintUpdatedCallback, callbackParam unsafe.Pointer)
-type wkeOnPaintBitUpdated func(webView WebView, callback PaintBitUpdatedCallback, callbackParam unsafe.Pointer)
-type wkeOnAlertBox func(webView WebView, callback AlertBoxCallback, callbackParam unsafe.Pointer)
-type wkeOnConfirmBox func(webView WebView, callback ConfirmBoxCallback, callbackParam unsafe.Pointer)
-type wkeOnPromptBox func(webView WebView, callback PromptBoxCallback, callbackParam unsafe.Pointer)
-type wkeOnNavigation func(webView WebView, callback NavigationCallback, param unsafe.Pointer)
-type wkeOnCreateView func(webView WebView, callback CreateViewCallback, param unsafe.Pointer)
-type wkeOnDocumentReady func(webView WebView, callback DocumentReadyCallback, param unsafe.Pointer)
-type wkeOnDocumentReady2 func(webView WebView, callback DocumentReady2Callback, param unsafe.Pointer)
-type wkeOnLoadingFinish func(webView WebView, callback LoadingFinishCallback, param unsafe.Pointer)
-type wkeOnDownload func(webView WebView, callback DownloadCallback, param unsafe.Pointer)
-type wkeOnDownload2 func(webView WebView, callback Download2Callback, param unsafe.Pointer)
-type wkeOnConsole func(webView WebView, callback ConsoleCallback, param unsafe.Pointer)
-type wkeSetUIThreadCallback func(webView WebView, callback CallUiThread, param unsafe.Pointer)
-type wkeOnLoadUrlBegin func(webView WebView, callback LoadUrlBeginCallback, callbackParam unsafe.Pointer)
-type wkeOnLoadUrlEnd func(webView WebView, callback LoadUrlEndCallback, callbackParam unsafe.Pointer)
-type wkeOnLoadUrlHeadersReceived func(webView WebView, callback LoadUrlHeadersReceivedCallback, callbackParam unsafe.Pointer)
-type wkeOnLoadUrlFinish func(webView WebView, callback LoadUrlFinishCallback, callbackParam unsafe.Pointer)
-type wkeOnLoadUrlFail func(webView WebView, callback LoadUrlFailCallback, callbackParam unsafe.Pointer)
-type wkeOnDidCreateScriptContext func(webView WebView, callback DidCreateScriptContextCallback, callbackParam unsafe.Pointer)
-type wkeOnWillReleaseScriptContext func(webView WebView, callback WillReleaseScriptContextCallback, callbackParam unsafe.Pointer)
-type wkeOnWindowClosing func(webWindow WebView, callback WindowClosingCallback, param unsafe.Pointer)
-type wkeOnWindowDestroy func(webWindow WebView, callback WindowDestroyCallback, param unsafe.Pointer)
-type wkeOnDraggableRegionsChanged func(webView WebView, callback DraggableRegionsChangedCallback, param unsafe.Pointer)
-type wkeOnWillMediaLoad func(webView WebView, callback WillMediaLoadCallback, param unsafe.Pointer)
-type wkeOnStartDragging func(webView WebView, callback StartDraggingCallback, param unsafe.Pointer)
-type wkeOnPrint func(webView WebView, callback OnPrintCallback, param unsafe.Pointer)
-type wkeScreenshot func(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param unsafe.Pointer)
-type wkeOnOtherLoad func(webView WebView, callback OnOtherLoadCallback, param unsafe.Pointer)
-type wkeOnContextMenuItemClick func(webView WebView, callback OnContextMenuItemClickCallback, param unsafe.Pointer)
+type wkeOnCaretChanged func(webView WebView, callback CaretChangedCallback, callbackParam uintptr)
+type wkeOnMouseOverUrlChanged func(webView WebView, callback TitleChangedCallback, callbackParam uintptr)
+type wkeOnTitleChanged func(webView WebView, callback TitleChangedCallback, callbackParam uintptr)
+type wkeOnURLChanged func(webView WebView, callback URLChangedCallback, callbackParam uintptr)
+type wkeOnURLChanged2 func(webView WebView, callback URLChangedCallback2, callbackParam uintptr)
+type wkeOnPaintUpdated func(webView WebView, callback PaintUpdatedCallback, callbackParam uintptr)
+type wkeOnPaintBitUpdated func(webView WebView, callback PaintBitUpdatedCallback, callbackParam uintptr)
+type wkeOnAlertBox func(webView WebView, callback AlertBoxCallback, callbackParam uintptr)
+type wkeOnConfirmBox func(webView WebView, callback ConfirmBoxCallback, callbackParam uintptr)
+type wkeOnPromptBox func(webView WebView, callback PromptBoxCallback, callbackParam uintptr)
+type wkeOnNavigation func(webView WebView, callback NavigationCallback, param uintptr)
+type wkeOnCreateView func(webView WebView, callback CreateViewCallback, param uintptr)
+type wkeOnDocumentReady func(webView WebView, callback DocumentReadyCallback, param uintptr)
+type wkeOnDocumentReady2 func(webView WebView, callback DocumentReady2Callback, param uintptr)
+type wkeOnLoadingFinish func(webView WebView, callback LoadingFinishCallback, param uintptr)
+type wkeOnDownload func(webView WebView, callback DownloadCallback, param uintptr)
+type wkeOnDownload2 func(webView WebView, callback Download2Callback, param uintptr)
+type wkeOnConsole func(webView WebView, callback ConsoleCallback, param uintptr)
+type wkeSetUIThreadCallback func(webView WebView, callback CallUiThread, param uintptr)
+type wkeOnLoadUrlBegin func(webView WebView, callback LoadUrlBeginCallback, callbackParam uintptr)
+type wkeOnLoadUrlEnd func(webView WebView, callback LoadUrlEndCallback, callbackParam uintptr)
+type wkeOnLoadUrlHeadersReceived func(webView WebView, callback LoadUrlHeadersReceivedCallback, callbackParam uintptr)
+type wkeOnLoadUrlFinish func(webView WebView, callback LoadUrlFinishCallback, callbackParam uintptr)
+type wkeOnLoadUrlFail func(webView WebView, callback LoadUrlFailCallback, callbackParam uintptr)
+type wkeOnDidCreateScriptContext func(webView WebView, callback DidCreateScriptContextCallback, callbackParam uintptr)
+type wkeOnWillReleaseScriptContext func(webView WebView, callback WillReleaseScriptContextCallback, callbackParam uintptr)
+type wkeOnWindowClosing func(webWindow WebView, callback WindowClosingCallback, param uintptr)
+type wkeOnWindowDestroy func(webWindow WebView, callback WindowDestroyCallback, param uintptr)
+type wkeOnDraggableRegionsChanged func(webView WebView, callback DraggableRegionsChangedCallback, param uintptr)
+type wkeOnWillMediaLoad func(webView WebView, callback WillMediaLoadCallback, param uintptr)
+type wkeOnStartDragging func(webView WebView, callback StartDraggingCallback, param uintptr)
+type wkeOnPrint func(webView WebView, callback OnPrintCallback, param uintptr)
+type wkeScreenshot func(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback, param uintptr)
+type wkeOnOtherLoad func(webView WebView, callback OnOtherLoadCallback, param uintptr)
+type wkeOnContextMenuItemClick func(webView WebView, callback OnContextMenuItemClickCallback, param uintptr)
 type wkeIsProcessingUserGesture func(webView WebView) bool
 type wkeNetSetMIMEType func(jobPtr NetJob, type_ string)
-type wkeNetGetMIMEType func(jobPtr NetJob, mime *String) string
+type wkeNetGetMIMEType func(jobPtr NetJob, mime *WkeString) string
 type wkeNetGetReferrer func(jobPtr NetJob) string
 type wkeNetSetHTTPHeaderField func(jobPtr NetJob, key, value uint16, response bool)
 type wkeNetGetHTTPHeaderField func(jobPtr NetJob, key string) string
@@ -1058,14 +1058,14 @@ type wkeNetGetRawHttpHead func(jobPtr NetJob) Slist
 type wkeNetGetRawResponseHead func(jobPtr NetJob) Slist
 type wkeNetCancelRequest func(jobPtr NetJob)
 type wkeNetHoldJobToAsynCommit func(jobPtr NetJob) bool
-type wkeNetOnResponse func(webView WebView, callback NetResponseCallback, param unsafe.Pointer)
-type wkeNetGetFavicon func(webView WebView, callback OnNetGetFaviconCallback, param unsafe.Pointer) int
+type wkeNetOnResponse func(webView WebView, callback NetResponseCallback, param uintptr)
+type wkeNetGetFavicon func(webView WebView, callback OnNetGetFaviconCallback, param uintptr) int
 type wkeNetCreateWebUrlRequest func(url, method, mime string) WebUrlRequestPtr
 type wkeNetCreateWebUrlRequest2 func(request blinkWebURLRequestPtr) WebUrlRequestPtr
 type wkeNetCopyWebUrlRequest func(jobPtr NetJob, needExtraData bool) blinkWebURLRequestPtr
 type wkeNetDeleteBlinkWebURLRequestPtr func(request blinkWebURLRequestPtr)
 type wkeNetAddHTTPHeaderFieldToUrlRequest func(request WebUrlRequestPtr, name, value string)
-type wkeNetStartUrlRequest func(webView WebView, request WebUrlRequestPtr, param unsafe.Pointer, callbacks *UrlRequestCallbacks) int
+type wkeNetStartUrlRequest func(webView WebView, request WebUrlRequestPtr, param uintptr, callbacks *UrlRequestCallbacks) int
 type wkeNetGetHttpStatusCode func(response WebUrlResponsePtr) int
 type wkeNetGetExpectedContentLength func(response WebUrlResponsePtr) int64
 type wkeNetGetResponseUrl func(response WebUrlResponsePtr) string
@@ -1161,19 +1161,19 @@ type wkePrintToBitmap func(
 type wkeUtilRelasePrintPdfDatas func(datas *PdfDatas)
 type wkeSetWindowTitle func(webWindow WebView, title string)
 type wkeSetWindowTitleW func(webWindow WebView, title uint16)
-type wkeNodeOnCreateProcess func(webView WebView, callback NodeOnCreateProcessCallback, param unsafe.Pointer)
-type wkeOnPluginFind func(webView WebView, mime string, callback OnPluginFindCallback, param unsafe.Pointer)
-type wkeAddNpapiPlugin func(webView WebView, initializeFunc, getEntryPointsFunc, shutdownFunc unsafe.Pointer)
-type wkePluginListBuilderAddPlugin func(builder unsafe.Pointer, name, description, fileName string)
-type wkePluginListBuilderAddMediaTypeToLastPlugin func(builder unsafe.Pointer, name, description string)
-type wkePluginListBuilderAddFileExtensionToLastMediaType func(builder unsafe.Pointer, fileExtension string)
-type wkeGetWebViewByNData func(ndata unsafe.Pointer) WebView
+type wkeNodeOnCreateProcess func(webView WebView, callback NodeOnCreateProcessCallback, param uintptr)
+type wkeOnPluginFind func(webView WebView, mime string, callback OnPluginFindCallback, param uintptr)
+type wkeAddNpapiPlugin func(webView WebView, initializeFunc, getEntryPointsFunc, shutdownFunc uintptr)
+type wkePluginListBuilderAddPlugin func(builder uintptr, name, description, fileName string)
+type wkePluginListBuilderAddMediaTypeToLastPlugin func(builder uintptr, name, description string)
+type wkePluginListBuilderAddFileExtensionToLastMediaType func(builder uintptr, fileExtension string)
+type wkeGetWebViewByNData func(ndata uintptr) WebView
 type wkeRegisterEmbedderCustomElement func(
 	webView WebView,
 	frameId WebFrameHandle,
 	name string,
-	options unsafe.Pointer, // 使用unsafe.Pointer来表示任意类型的指针
-	outResult unsafe.Pointer, // 同样使用unsafe.Pointer
+	options uintptr, // 使用uintptr来表示任意类型的指针
+	outResult uintptr, // 同样使用uintptr
 ) bool
 type wkeSetMediaPlayerFactory func(
 	webView WebView,
@@ -1196,9 +1196,9 @@ type wkeSaveMemoryCache func(webView WebView)
 // type jsBindFunction func(name string, fn JsNativeFunction, argCount uint)
 // type jsBindGetter func(name string, fn JsNativeFunction)
 // type jsBindSetter func(name string, fn JsNativeFunction)
-type wkeJsBindFunction func(name string, fn wkeJsNativeFunction, param unsafe.Pointer, argCount uint)
-type wkeJsBindGetter func(name string, fn wkeJsNativeFunction, param unsafe.Pointer)
-type wkeJsBindSetter func(name string, fn wkeJsNativeFunction, param unsafe.Pointer)
+type wkeJsBindFunction func(name string, fn wkeJsNativeFunction, param uintptr, argCount uint)
+type wkeJsBindGetter func(name string, fn wkeJsNativeFunction, param uintptr)
+type wkeJsBindSetter func(name string, fn wkeJsNativeFunction, param uintptr)
 type jsArgCount func(es JsExecState) int
 type jsArgType func(es JsExecState, argIdx int) JsType
 type jsArg func(es JsExecState, argIdx int) JsValue
@@ -1222,7 +1222,7 @@ type jsArrayBuffer func(es JsExecState, buffer *byte, size uintptr) JsValue
 type jsGetArrayBuffer func(es JsExecState, value JsValue) *MemBuf
 type jsToTempString func(es JsExecState, v JsValue) string
 type jsToTempStringW func(es JsExecState, v JsValue) uint16
-type v8ValuePtr interface{} // 假设v8ValuePtr是v8::Persistent<v8::Value>*的某种Go接口或类型
+type v8ValuePtr uintptr // 假设v8ValuePtr是v8::Persistent<v8::Value>*的某种Go接口或类型
 type jsToV8Value func(es JsExecState, v JsValue) v8ValuePtr
 type jsInt func(n int) JsValue
 type jsFloat func(f float32) JsValue

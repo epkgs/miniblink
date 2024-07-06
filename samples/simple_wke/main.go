@@ -6,6 +6,7 @@ import (
 
 func main() {
 
+	// 通过添加版本 tag 加载对应的内嵌版本
 	if err := wke.LoadLibrary(""); err != nil {
 		panic(err)
 	}
