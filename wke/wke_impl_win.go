@@ -408,6 +408,16 @@ func LoadLibrary(name string) error {
 	return nil
 }
 
+func Release() error {
+	err := lib.Release()
+	if err != nil {
+		return err
+	}
+
+	wkeDLL = nil
+	return nil
+}
+
 func initProcs() {
 
 	_wkeJsNativeFunction = wkeDLL.NewProc("wkeJsNativeFunction")
@@ -788,10 +798,6 @@ func initProcs() {
 	_wkeInit = wkeDLL.NewProc("wkeInit")
 	_wkeInitialize = wkeDLL.NewProc("wkeInitialize")
 	_wkeInitializeEx = wkeDLL.NewProc("wkeInitializeEx")
-}
-
-func Release() error {
-	return lib.Release()
 }
 
 func JsNativeFunction(es JsExecState, param uintptr) JsValue {

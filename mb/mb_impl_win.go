@@ -246,6 +246,16 @@ func LoadLibrary(name string) error {
 	return nil
 }
 
+func Release() error {
+	err := lib.Release()
+	if err != nil {
+		return err
+	}
+
+	mbDLL = nil
+	return nil
+}
+
 func initProcs() {
 
 	_mbInit = mbDLL.NewProc("mbInit")
@@ -491,17 +501,17 @@ func DestroyWebView(webview WebView) {
 	_mbDestroyWebView.Call(uintptr(webview))
 }
 
-func CreateWebWindow(typ WindowType, parent Handle, x, y, width, height int) WebView {
+func CreateWebWindow(typ WindowType, parent HWND, x, y, width, height int32) WebView {
 	r1, _, _ := _mbCreateWebWindow.Call(uintptr(typ), uintptr(parent), uintptr(x), uintptr(y), uintptr(width), uintptr(height))
 	return WebView(r1)
 }
 
-func CreateWebCustomWindow(parent Handle, style, styleEx uint32, x, y, width, height int) WebView {
+func CreateWebCustomWindow(parent HWND, style, styleEx uint32, x, y, width, height int32) WebView {
 	r1, _, _ := _mbCreateWebCustomWindow.Call(uintptr(parent), uintptr(style), uintptr(styleEx), uintptr(x), uintptr(y), uintptr(width), uintptr(height))
 	return WebView(r1)
 }
 
-func MoveWindow(webview WebView, x, y, width, height int) {
+func MoveWindow(webview WebView, x, y, width, height int32) {
 	_mbMoveWindow.Call(uintptr(webview), uintptr(x), uintptr(y), uintptr(width), uintptr(height))
 }
 
@@ -526,27 +536,27 @@ func IsAudioMuted(webview WebView) bool {
 	return 0 != r1
 }
 
-func CreateString(str string, length uintptr) StringPtr {
+func CreateString(str string, length uintptr) MbString {
 	r1, _, _ := _mbCreateString.Call(StrToPtr(str), length)
-	return StringPtr(r1)
+	return MbString(r1)
 }
 
-func CreateStringWithoutNullTermination(str string, length uintptr) StringPtr {
+func CreateStringWithoutNullTermination(str string, length uintptr) MbString {
 	r1, _, _ := _mbCreateStringWithoutNullTermination.Call(StrToPtr(str), length)
-	return StringPtr(r1)
+	return MbString(r1)
 }
 
-func DeleteString(str StringPtr) {
-	_mbDeleteString.Call(uintptr(str))
+func DeleteString(mbStr MbString) {
+	_mbDeleteString.Call(uintptr(mbStr))
 }
 
-func GetStringLen(str StringPtr) uintptr {
-	r1, _, _ := _mbGetStringLen.Call(uintptr(str))
+func GetStringLen(mbStr MbString) uintptr {
+	r1, _, _ := _mbGetStringLen.Call(uintptr(mbStr))
 	return r1
 }
 
-func GetString(str StringPtr) string {
-	r1, _, _ := _mbGetString.Call(uintptr(str))
+func GetString(mbStr MbString) string {
+	r1, _, _ := _mbGetString.Call(uintptr(mbStr))
 	return StrFromPtr(r1)
 }
 func SetProxy(webView WebView, proxy *Proxy) {
@@ -593,7 +603,19 @@ func NetCancelRequest(jobPtr NetJob) {
 }
 
 func NetOnResponse(webviewHandle WebView, callback NetResponseCallback) {
-	_mbNetOnResponse.Call(uintptr(webviewHandle), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, url uintptr, job NetJob) BOOL {
+			if callback(webView, StrFromPtr(url), job) {
+				return TRUE
+			} else {
+				return FALSE
+			}
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbNetOnResponse.Call(uintptr(webviewHandle), cbPtr, 0)
 }
 
 func NetSetWebsocketCallback(webview WebView, callbacks *WebsocketHookCallbacks) {
@@ -606,12 +628,42 @@ func NetSetWebsocketCallback(webview WebView, callbacks *WebsocketHookCallbacks)
 		onError       uintptr
 	}
 
+	var onWillConnect = func(webView WebView, param uintptr, channel WebSocketChannel, url uintptr, needHook uintptr) uintptr {
+		rst := callbacks.OnWillConnect(webView, channel, StrFromPtr(url), BoolFromPtr(needHook))
+		return uintptr(rst)
+	}
+
+	var onConnected = func(webView WebView, param uintptr, channel WebSocketChannel) BOOL {
+		if callbacks.OnConnected(webView, channel) {
+			return TRUE
+		} else {
+			return FALSE
+		}
+	}
+
+	var onReceive = func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len uintptr, isContinue uintptr) uintptr {
+		data := unsafe.Slice(buf, len)
+		rst := callbacks.OnReceive(webView, channel, opCode, data, BoolFromPtr(isContinue))
+		return uintptr(rst)
+	}
+
+	var onSend = func(webView WebView, param uintptr, channel WebSocketChannel, opCode int, buf *byte, len uintptr, isContinue uintptr) uintptr {
+		data := unsafe.Slice(buf, len)
+		rst := callbacks.OnSend(webView, channel, opCode, data, BoolFromPtr(isContinue))
+		return uintptr(rst)
+	}
+
+	var onError = func(webView WebView, param uintptr, channel WebSocketChannel) (void uintptr) {
+		callbacks.OnError(webView, channel)
+		return
+	}
+
 	cbs := mbWebsocketHookCallbacks{
-		onWillConnect: CallbackToPtr(callbacks.OnWillConnect),
-		onConnected:   CallbackToPtr(callbacks.OnConnected),
-		onReceive:     CallbackToPtr(callbacks.OnReceive),
-		onSend:        CallbackToPtr(callbacks.OnSend),
-		onError:       CallbackToPtr(callbacks.OnError),
+		onWillConnect: CallbackToPtr(onWillConnect),
+		onConnected:   CallbackToPtr(onConnected),
+		onReceive:     CallbackToPtr(onReceive),
+		onSend:        CallbackToPtr(onSend),
+		onError:       CallbackToPtr(onError),
 	}
 
 	_mbNetSetWebsocketCallback.Call(uintptr(webview), uintptr(unsafe.Pointer(&cbs)), 0)
@@ -662,7 +714,49 @@ func NetAddHTTPHeaderFieldToUrlRequest(request *WebUrlRequest, name, value strin
 }
 
 func NetStartUrlRequest(webView WebView, request *WebUrlRequest, callbacks *UrlRequestCallbacks) int {
-	r1, _, _ := _mbNetStartUrlRequest.Call(uintptr(webView), uintptr(unsafe.Pointer(request)), 0, CallbackToPtr(callbacks))
+	type Callbacks struct {
+		willRedirectCallback       uintptr
+		didReceiveResponseCallback uintptr
+		didReceiveDataCallback     uintptr
+		didFailCallback            uintptr
+		didFinishLoadingCallback   uintptr
+	}
+
+	var willRedirectCallback = func(webView WebView, param uintptr, oldRequest WebUrlRequestPtr, request WebUrlRequestPtr, redirectResponse WebUrlResponsePtr) (void uintptr) {
+		callbacks.WillRedirectCallback(webView, oldRequest, request, redirectResponse)
+		return
+	}
+
+	var didReceiveResponseCallback = func(webView WebView, param uintptr, request WebUrlRequestPtr, response WebUrlResponsePtr) (void uintptr) {
+		callbacks.DidReceiveResponseCallback(webView, request, response)
+		return
+	}
+
+	var didReceiveDataCallback = func(webView WebView, param uintptr, request WebUrlRequestPtr, data *byte, dataLength int) (void uintptr) {
+		byts := unsafe.Slice(data, dataLength)
+		callbacks.DidReceiveDataCallback(webView, request, byts)
+		return
+	}
+
+	var didFailCallback = func(webView WebView, param uintptr, request WebUrlRequestPtr, err uintptr) (void uintptr) {
+		callbacks.DidFailCallback(webView, request, StrFromPtr(err))
+		return
+	}
+
+	var didFinishLoadingCallback = func(webView WebView, param uintptr, request WebUrlRequestPtr, finishTime uintptr) (void uintptr) {
+		callbacks.DidFinishLoadingCallback(webView, request, F64FromPtr(finishTime))
+		return
+	}
+
+	cbs := Callbacks{
+		willRedirectCallback:       CallbackToPtr(willRedirectCallback),
+		didReceiveResponseCallback: CallbackToPtr(didReceiveResponseCallback),
+		didReceiveDataCallback:     CallbackToPtr(didReceiveDataCallback),
+		didFailCallback:            CallbackToPtr(didFailCallback),
+		didFinishLoadingCallback:   CallbackToPtr(didFinishLoadingCallback),
+	}
+
+	r1, _, _ := _mbNetStartUrlRequest.Call(uintptr(webView), uintptr(unsafe.Pointer(request)), 0, uintptr(unsafe.Pointer(&cbs)))
 	return int(r1)
 }
 
@@ -793,11 +887,11 @@ func SetCookieEnabled(webView WebView, enable bool) {
 }
 
 func SetCookieJarPath(webView WebView, path string) {
-	_mbSetCookieJarPath.Call(uintptr(webView), StrToPtr(path))
+	_mbSetCookieJarPath.Call(uintptr(webView), StrToWPtr(path))
 }
 
 func SetCookieJarFullPath(webView WebView, path string) {
-	_mbSetCookieJarFullPath.Call(uintptr(webView), StrToPtr(path))
+	_mbSetCookieJarFullPath.Call(uintptr(webView), StrToWPtr(path))
 }
 
 func SetLocalStorageFullPath(webView WebView, path string) {
@@ -868,15 +962,39 @@ func SetResourceGc(webView WebView, intervalSec int) {
 }
 
 func CanGoForward(webView WebView, callback CanGoBackForwardCallback) {
-	_mbCanGoForward.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, state AsynRequestState, b BOOL) {
+			callback(webView, state, BoolFromPtr(uintptr(b)))
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbCanGoForward.Call(uintptr(webView), cbPtr, 0)
 }
 
 func CanGoBack(webView WebView, callback CanGoBackForwardCallback) {
-	_mbCanGoBack.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, state AsynRequestState, b BOOL) {
+			callback(webView, state, BoolFromPtr(uintptr(b)))
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbCanGoBack.Call(uintptr(webView), cbPtr, 0)
 }
 
 func GetCookie(webView WebView, callback GetCookieCallback) {
-	_mbGetCookie.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, state AsynRequestState, cookie uintptr) {
+			callback(webView, state, StrFromPtr(cookie))
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbGetCookie.Call(uintptr(webView), cbPtr, 0)
 }
 
 func GetCookieOnBlinkThread(webView WebView) string {
@@ -893,106 +1011,415 @@ func Resize(webView WebView, w, h int) {
 }
 
 func OnNavigation(webView WebView, callback NavigationCallback) {
-	_mbOnNavigation.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, navigationType NavigationType, url uintptr) BOOL {
+			if callback(webView, navigationType, StrFromPtr(url)) {
+				return TRUE
+			} else {
+				return FALSE
+			}
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnNavigation.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnNavigationSync(webView WebView, callback NavigationCallback) {
-	_mbOnNavigationSync.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, navigationType NavigationType, url uintptr) BOOL {
+			if callback(webView, navigationType, StrFromPtr(url)) {
+				return TRUE
+			} else {
+				return FALSE
+			}
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnNavigationSync.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnCreateView(webView WebView, callback CreateViewCallback) {
-	_mbOnCreateView.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, navigationType NavigationType, url uintptr, windowFeatures *WindowFeatures) WebView {
+			return callback(webView, navigationType, StrFromPtr(url), windowFeatures)
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnCreateView.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnDocumentReady(webView WebView, callback DocumentReadyCallback) {
-	_mbOnDocumentReady.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, frameId WebFrameHandle) (void uintptr) {
+			callback(webView, frameId)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDocumentReady.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnDocumentReadyInBlinkThread(webView WebView, callback DocumentReadyCallback) {
-	_mbOnDocumentReadyInBlinkThread.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, frameId WebFrameHandle) (void uintptr) {
+			callback(webView, frameId)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDocumentReadyInBlinkThread.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnPaintUpdated(webView WebView, callback PaintUpdatedCallback) {
-	_mbOnPaintUpdated.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, hdc HDC, x, y, cx, cy int32) (void uintptr) {
+			callback(webView, hdc, x, y, cx, cy)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnPaintUpdated.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnPaintBitUpdated(webView WebView, callback PaintBitUpdatedCallback) {
-	_mbOnPaintBitUpdated.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param, buffer uintptr, r *Rect, width, height int32) (void uintptr) {
+			callback(webView, buffer, r, width, height)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnPaintBitUpdated.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnAcceleratedPaint(webView WebView, callback AcceleratedPaintCallback) {
-	_mbOnAcceleratedPaint.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, typ int32, dirytRects *Rect, dirytRectsSize, sharedHandle uintptr) (void uintptr) {
+			callback(webView, typ, dirytRects, dirytRectsSize, sharedHandle)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnAcceleratedPaint.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnLoadUrlBegin(webView WebView, callback LoadUrlBeginCallback) {
-	_mbOnLoadUrlBegin.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, job NetJob) BOOL {
+			if callback(webView, StrFromPtr(url), job) {
+				return TRUE
+			} else {
+				return FALSE
+			}
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadUrlBegin.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnLoadUrlEnd(webView WebView, callback LoadUrlEndCallback) {
-	_mbOnLoadUrlEnd.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, job NetJob, buf uintptr, len int32) (void uintptr) {
+			data := unsafe.Slice((*byte)(unsafe.Pointer(buf)), len)
+			callback(webView, StrFromPtr(url), job, data)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadUrlEnd.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnLoadUrlFail(webView WebView, callback LoadUrlFailCallback) {
-	_mbOnLoadUrlFail.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, job NetJob) (void uintptr) {
+			callback(webView, StrFromPtr(url), job)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadUrlFail.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnLoadUrlHeadersReceived(webView WebView, callback LoadUrlHeadersReceivedCallback) {
-	_mbOnLoadUrlHeadersReceived.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, job NetJob) (void uintptr) {
+			callback(webView, StrFromPtr(url), job)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadUrlHeadersReceived.Call(uintptr(webView), cbPtr, 0)
 }
 
 func OnLoadUrlFinish(webView WebView, callback LoadUrlFinishCallback) {
-	_mbOnLoadUrlFinish.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, job NetJob, len int) (void uintptr) {
+			callback(webView, StrFromPtr(url), job, len)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadUrlFinish.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnTitleChanged(webView WebView, callback TitleChangedCallback) {
-	_mbOnTitleChanged.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, title uintptr) (void uintptr) {
+			callback(webView, StrFromPtr(title))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnTitleChanged.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnURLChanged(webView WebView, callback URLChangedCallback) {
-	_mbOnURLChanged.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, canGoBack, canGoForward bool) (void uintptr) {
+			callback(webView, StrFromPtr(url), canGoBack, canGoForward)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnURLChanged.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnLoadingFinish(webView WebView, callback LoadingFinishCallback) {
-	_mbOnLoadingFinish.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, FrameId WebFrameHandle, url uintptr, Result LoadingResult, FailedReason uintptr) (void uintptr) {
+			callback(webView, FrameId, StrFromPtr(url), Result, StrFromPtr(FailedReason))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnLoadingFinish.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnDownload(webView WebView, callback DownloadCallback) {
-	_mbOnDownload.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, frameId WebFrameHandle, url uintptr, downloadJob uintptr) BOOL {
+			if callback(webView, frameId, StrFromPtr(url), downloadJob) {
+				return TRUE
+			}
+			return FALSE
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDownload.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnDownloadInBlinkThread(webView WebView, callback DownloadInBlinkThreadCallback) {
-	_mbOnDownloadInBlinkThread.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, params uintptr, expectedContentLength uintptr, url uintptr, mime uintptr, disposition uintptr, job NetJob, dataBind uintptr) uintptr {
+			opt := callback(webView, expectedContentLength, StrFromPtr(url), StrFromPtr(mime), StrFromPtr(disposition), job, (*NetJobDataBind)(unsafe.Pointer(dataBind)))
+			return uintptr(opt)
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDownloadInBlinkThread.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnAlertBox(webView WebView, callback AlertBoxCallback) {
-	_mbOnAlertBox.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, msg uintptr) (void uintptr) {
+			callback(webView, StrFromPtr(msg))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnAlertBox.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnConfirmBox(webView WebView, callback ConfirmBoxCallback) {
-	_mbOnConfirmBox.Call(uintptr(webView), CallbackToPtr(callback), 0)
+
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, msg uintptr) BOOL {
+			if callback(webView, StrFromPtr(msg)) {
+				return TRUE
+			}
+			return FALSE
+		}
+
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnConfirmBox.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnPromptBox(webView WebView, callback PromptBoxCallback) {
-	_mbOnPromptBox.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, msg, defaultResult uintptr) uintptr {
+			rst := callback(webView, StrFromPtr(msg), StrFromPtr(defaultResult))
+			return uintptr(rst)
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnPromptBox.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnNetGetFavicon(webView WebView, callback NetGetFaviconCallback) {
-	_mbOnNetGetFavicon.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, url uintptr, buf *MemBuf) (void uintptr) {
+			callback(webView, StrFromPtr(url), buf)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnNetGetFavicon.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnConsole(webView WebView, callback ConsoleCallback) {
-	_mbOnConsole.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, level ConsoleLevel, message uintptr, sourceName uintptr, sourceLine uint, stackTrace uintptr) (void uintptr) {
+			callback(webView, level, StrFromPtr(message), StrFromPtr(sourceName), sourceLine, StrFromPtr(stackTrace))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnConsole.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnClose(webView WebView, callback CloseCallback) {
-	_mbOnClose.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, unuse uintptr) BOOL {
+			if callback(webView, unuse) {
+				return TRUE
+			}
+			return FALSE
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnClose.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnDestroy(webView WebView, callback DestroyCallback) {
-	_mbOnDestroy.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, unuse uintptr) BOOL {
+			if callback(webView, unuse) {
+				return TRUE
+			}
+			return FALSE
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDestroy.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnPrinting(webView WebView, callback PrintingCallback) {
-	_mbOnPrinting.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webview WebView, param uintptr, step PrintintStep, hDC Handle, settings *PrintintSettings, pageCount int32) BOOL {
+			if callback(webview, step, hDC, settings, pageCount) {
+				return TRUE
+			}
+			return FALSE
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnPrinting.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnPluginList(webView WebView, callback GetPluginListCallback) {
-	_mbOnPluginList.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(refresh bool, pluginListBuilder, param uintptr) BOOL {
+			if callback(refresh, pluginListBuilder) {
+				return TRUE
+			}
+			return FALSE
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnPluginList.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnImageBufferToDataURL(webView WebView, callback ImageBufferToDataURLCallback) {
-	_mbOnImageBufferToDataURL.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, data *byte, size uintptr) uintptr {
+			byts := unsafe.Slice(data, size)
+			return uintptr(callback(webView, byts))
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnImageBufferToDataURL.Call(uintptr(webView), cbPtr, 0)
 }
+
 func OnDidCreateScriptContext(webView WebView, callback DidCreateScriptContextCallback) {
-	_mbOnDidCreateScriptContext.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, extensionGroup, worldId int) (void uintptr) {
+			callback(webView, frameId, context, extensionGroup, worldId)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnDidCreateScriptContext.Call(uintptr(webView), cbPtr, 0)
 }
 func OnWillReleaseScriptContext(webView WebView, callback WillReleaseScriptContextCallback) {
-	_mbOnWillReleaseScriptContext.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, frameId WebFrameHandle, context uintptr, worldId int) (void uintptr) {
+			callback(webView, frameId, context, worldId)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnWillReleaseScriptContext.Call(uintptr(webView), cbPtr, 0)
 }
 func GoBack(webView WebView) {
 	_mbGoBack.Call(uintptr(webView))
@@ -1135,13 +1562,31 @@ func GetJsValueType(es JsExecState, v JsValue) JsType {
 	return JsType(r1)
 }
 func OnJsQuery(webView WebView, callback JsQueryCallback) {
-	_mbOnJsQuery.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, es JsExecState, queryId int64, customMsg int, request uintptr) (void uintptr) {
+			callback(webView, es, queryId, customMsg, StrFromPtr(request))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnJsQuery.Call(uintptr(webView), cbPtr, 0)
 }
 func ResponseQuery(webView WebView, queryId int64, customMsg int, response string) {
 	_mbResponseQuery.Call(uintptr(webView), uintptr(queryId), uintptr(customMsg), StrToPtr(response))
 }
 func RunJs(webView WebView, frameId WebFrameHandle, script string, isInClosure bool, callback RunJsCallback, unuse uintptr) {
-	_mbRunJs.Call(uintptr(webView), uintptr(frameId), StrToPtr(script), BoolToPtr(isInClosure), CallbackToPtr(callback), 0, unuse)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, es JsExecState, v JsValue) (void uintptr) {
+			callback(webView, es, v)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbRunJs.Call(uintptr(webView), uintptr(frameId), StrToPtr(script), BoolToPtr(isInClosure), cbPtr, 0, unuse)
 }
 func RunJsSync(webView WebView, frameId WebFrameHandle, script string, isInClosure bool) JsValue {
 	r1, _, _ := _mbRunJsSync.Call(uintptr(webView), uintptr(frameId), StrToPtr(script), BoolToPtr(isInClosure))
@@ -1162,10 +1607,29 @@ func SetDeviceParameter(webView WebView, device, paramStr string, paramInt int, 
 	_mbSetDeviceParameter.Call(uintptr(webView), StrToPtr(device), StrToPtr(paramStr), uintptr(paramInt), F32ToPtr(paramFloat))
 }
 func GetContentAsMarkup(webView WebView, callback GetContentAsMarkupCallback, frameId WebFrameHandle) {
-	_mbGetContentAsMarkup.Call(uintptr(webView), CallbackToPtr(callback), 0, uintptr(frameId))
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, content uintptr, size uintptr) (void uintptr) {
+			data := unsafe.Slice((*byte)(unsafe.Pointer(content)), size)
+			callback(webView, data)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbGetContentAsMarkup.Call(uintptr(webView), cbPtr, 0, uintptr(frameId))
 }
 func GetSource(webView WebView, callback GetSourceCallback) {
-	_mbGetSource.Call(uintptr(webView), CallbackToPtr(callback))
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, mhtml uintptr) (void uintptr) {
+			callback(webView, StrFromPtr(mhtml))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbGetSource.Call(uintptr(webView), cbPtr)
 }
 func UtilSerializeToMHTML(webView WebView, callback GetSourceCallback) {
 	_mbUtilSerializeToMHTML.Call(uintptr(webView), CallbackToPtr(callback))
@@ -1203,13 +1667,42 @@ func UtilCreateV8Snapshot(str string) *MemBuf {
 	return (*MemBuf)(unsafe.Pointer(r1))
 }
 func UtilPrintToPdf(webView WebView, frameId WebFrameHandle, settings *PrintSettings, callback PrintPdfDataCallback) {
-	_mbUtilPrintToPdf.Call(uintptr(webView), uintptr(frameId), uintptr(unsafe.Pointer(settings)), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webview WebView, param uintptr, datas uintptr) (void uintptr) {
+			callback(webview, (*PdfDatas)(unsafe.Pointer(datas)))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbUtilPrintToPdf.Call(uintptr(webView), uintptr(frameId), uintptr(unsafe.Pointer(settings)), cbPtr, 0)
 }
 func UtilPrintToBitmap(webView WebView, frameId WebFrameHandle, settings *ScreenshotSettings, callback PrintBitmapCallback) {
-	_mbUtilPrintToBitmap.Call(uintptr(webView), uintptr(frameId), uintptr(unsafe.Pointer(settings)), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webview WebView, param uintptr, data uintptr, size uintptr) (void uintptr) {
+			d := unsafe.Slice((*byte)(unsafe.Pointer(data)), size)
+			callback(webview, d)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbUtilPrintToBitmap.Call(uintptr(webView), uintptr(frameId), uintptr(unsafe.Pointer(settings)), cbPtr, 0)
 }
 func UtilScreenshot(webView WebView, settings *ScreenshotSettings, callback OnScreenshotCallback) {
-	_mbUtilScreenshot.Call(uintptr(webView), uintptr(unsafe.Pointer(settings)), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webview WebView, param uintptr, data uintptr, size uintptr) (void uintptr) {
+			d := unsafe.Slice((*byte)(unsafe.Pointer(data)), size)
+			callback(webview, d)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbUtilScreenshot.Call(uintptr(webView), uintptr(unsafe.Pointer(settings)), cbPtr, 0)
 }
 func UtilsSilentPrint(webView WebView, settings string) bool {
 	r1, _, _ := _mbUtilsSilentPrint.Call(uintptr(webView), StrToPtr(settings))
@@ -1231,7 +1724,17 @@ func DownloadByPath(webView WebView, downloadOptions *DownloadOptions, path stri
 	return DownloadOpt(r1)
 }
 func GetPdfPageData(webView WebView, callback OnGetPdfPageDataCallback) {
-	_mbGetPdfPageData.Call(uintptr(webView), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, data uintptr, size uintptr) (void uintptr) {
+			byts := unsafe.Slice((*byte)(unsafe.Pointer(data)), size)
+			callback(webView, byts)
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbGetPdfPageData.Call(uintptr(webView), cbPtr, 0)
 }
 func CreateMemBuf(webView WebView, buf []byte) *MemBuf {
 	r1, _, _ := _mbCreateMemBuf.Call(uintptr(webView), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
@@ -1250,57 +1753,82 @@ func GetUserKeyValue(webView WebView, key string) uintptr {
 func PluginListBuilderAddPlugin(builder uintptr, name, description, fileName string) {
 	_mbPluginListBuilderAddPlugin.Call(builder, StrToPtr(name), StrToPtr(description), StrToPtr(fileName))
 }
+
 func PluginListBuilderAddMediaTypeToLastPlugin(builder uintptr, name, description string) {
 	_mbPluginListBuilderAddMediaTypeToLastPlugin.Call(builder, StrToPtr(name), StrToPtr(description))
 }
+
 func PluginListBuilderAddFileExtensionToLastMediaType(builder uintptr, fileExtension string) {
 	_mbPluginListBuilderAddFileExtensionToLastMediaType.Call(builder, StrToPtr(fileExtension))
 }
+
 func GetBlinkMainThreadIsolate() V8Isolate {
 	r1, _, _ := _mbGetBlinkMainThreadIsolate.Call()
 	return V8Isolate(r1)
 }
+
 func WebFrameGetMainWorldScriptContext(webView WebView, frameId WebFrameHandle, contextOut *V8ContextPtr) {
 	_mbWebFrameGetMainWorldScriptContext.Call(uintptr(webView), uintptr(frameId), uintptr(unsafe.Pointer(contextOut)))
 }
+
 func EnableHighDPISupport() {
 	_mbEnableHighDPISupport.Call()
 }
+
 func RunMessageLoop() {
 	_mbRunMessageLoop.Call()
 }
+
 func GetContentWidth(webView WebView) int {
 	r1, _, _ := _mbGetContentWidth.Call(uintptr(webView))
 	return int(r1)
 }
+
 func GetContentHeight(webView WebView) int {
 	r1, _, _ := _mbGetContentHeight.Call(uintptr(webView))
 	return int(r1)
 }
+
 func GetWebViewForCurrentContext() WebView {
 	r1, _, _ := _mbGetWebViewForCurrentContext.Call()
 	return WebView(r1)
 }
+
 func RegisterEmbedderCustomElement(webviewHandle WebView, frameId WebFrameHandle, name string, options, outResult uintptr) bool {
 	r1, _, _ := _mbRegisterEmbedderCustomElement.Call(uintptr(webviewHandle), uintptr(frameId), StrToPtr(name), options, outResult)
 	return BoolFromPtr(r1)
 }
+
 func OnNodeCreateProcess(webviewHandle WebView, callback NodeOnCreateProcessCallback) {
-	_mbOnNodeCreateProcess.Call(uintptr(webviewHandle), CallbackToPtr(callback), 0)
+	var cbPtr uintptr = 0
+	if callback != nil {
+
+		var cb = func(webView WebView, param uintptr, applicationPath, arguments uintptr, startup uintptr) (void uintptr) {
+			callback(webView, StrFromWPtr(applicationPath), StrFromWPtr(arguments), (*STARTUPINFOW)(unsafe.Pointer(startup)))
+			return
+		}
+		cbPtr = CallbackToPtr(cb)
+	}
+	_mbOnNodeCreateProcess.Call(uintptr(webviewHandle), cbPtr, 0)
 }
+
 func OnThreadIdle(callback ThreadCallback, param1, param2 uintptr) {
 	_mbOnThreadIdle.Call(CallbackToPtr(callback), param1, param2)
 }
+
 func GetProcAddr(name string) uintptr {
 	r1, _, _ := _mbGetProcAddr.Call(StrToPtr(name))
 	return r1
 }
+
 func SetMbDllPath(dllPath string) {
 	_mbSetMbDllPath.Call(StrToPtr(dllPath))
 }
+
 func SetMbMainDllPath(dllPath string) {
 	_mbSetMbMainDllPath.Call(StrToPtr(dllPath))
 }
+
 func FillFuncPtr() {
 	_mbFillFuncPtr.Call()
 }
