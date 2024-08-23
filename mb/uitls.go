@@ -2,10 +2,9 @@ package mb
 
 import (
 	"math"
+	"syscall"
 	"unicode/utf16"
 	"unsafe"
-
-	"golang.org/x/sys/windows"
 )
 
 type (
@@ -53,7 +52,7 @@ type (
 )
 
 func StrToPtr(s string) uintptr {
-	p, err := windows.BytePtrFromString(s)
+	p, err := syscall.BytePtrFromString(s)
 	if err != nil {
 		return 0
 	}
@@ -62,11 +61,21 @@ func StrToPtr(s string) uintptr {
 }
 
 func StrFromPtr(p uintptr) string {
-	return windows.BytePtrToString(AssertType[uint8](p))
+	if p == 0 {
+		return ""
+	}
+
+	// Find NUL terminator.
+	n := 0
+	for ptr := p; *(*byte)(unsafe.Pointer(ptr)) != 0; n++ {
+		ptr++
+	}
+
+	return string(unsafe.Slice((*byte)(unsafe.Pointer(p)), n))
 }
 
 func StrToChar(s string) []Char {
-	bytes, err := windows.ByteSliceFromString(s)
+	bytes, err := syscall.ByteSliceFromString(s)
 	if err != nil {
 		return nil
 	}
@@ -74,7 +83,7 @@ func StrToChar(s string) []Char {
 }
 
 func StrToWPtr(s string) uintptr {
-	p, err := windows.UTF16PtrFromString(s)
+	p, err := syscall.UTF16PtrFromString(s)
 	if err != nil {
 		return 0
 	}
@@ -86,7 +95,23 @@ func StrToWChar(s string) []uint16 {
 }
 
 func StrFromWPtr(p uintptr) string {
-	return windows.UTF16PtrToString(AssertType[uint16](p))
+
+	if p == 0 {
+		return ""
+	}
+
+	// Find NUL terminator.
+	n := 0
+	for ptr := p; *(*uint16)(unsafe.Pointer(ptr)) != 0; n++ {
+		ptr += unsafe.Sizeof(uint16(0))
+	}
+
+	return syscall.UTF16ToString(
+		unsafe.Slice(
+			(*uint16)(unsafe.Pointer(p)),
+			n,
+		),
+	)
 }
 
 func F32ToPtr(f float32) uintptr {
@@ -118,31 +143,10 @@ func BoolFromPtr(p uintptr) bool {
 	return p != 0
 }
 
-func AssertType[T interface{}](ptr uintptr) *T {
-	return (*T)(unsafe.Pointer(ptr))
-}
-
 func LOWORD(dwValue uint32) uint16 {
 	return uint16(dwValue & 0xFFFF)
 }
 
-func StrCopy(src uintptr, n int) string {
-	return string(BytesCopy(src, n))
-}
-
-func BytesCopy(src uintptr, n int) []byte {
-	if n == 0 {
-		return make([]byte, 0)
-	}
-
-	byts := make([]uint8, n)
-	for i := 0; i < n; i++ {
-		byts[i] = *(*uint8)(unsafe.Pointer(src + uintptr(i)))
-	}
-
-	return byts
-}
-
 func CallbackToPtr(callback interface{}) uintptr {
-	return windows.NewCallback(callback)
+	return syscall.NewCallback(callback)
 }

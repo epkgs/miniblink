@@ -5,11 +5,27 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 type DLL struct {
 	Name   string
 	Handle uintptr
+	procs  map[string]*Proc
+}
+
+type Proc struct {
+	Dll  *DLL
+	Name string
+	addr uintptr
+}
+
+func newDll(name string, handle uintptr) *DLL {
+	return &DLL{
+		Name:   name,
+		Handle: handle,
+		procs:  make(map[string]*Proc),
+	}
 }
 
 func (d *DLL) Release() error {
@@ -17,7 +33,51 @@ func (d *DLL) Release() error {
 		return nil
 	}
 
-	return release(Dll.Handle)
+	err := release(Dll.Handle)
+	if err != nil {
+		return err
+	}
+
+	Dll.procs = nil
+	Dll = nil
+
+	return nil
+}
+
+func (d *DLL) GetProc(name string) (*Proc, error) {
+	if d == nil || d.Handle == 0 {
+		return nil, errors.New("dll is not loaded")
+	}
+	if p, ok := d.procs[name]; ok {
+		return p, nil
+	}
+	addr, err := syscall.GetProcAddress(syscall.Handle(d.Handle), name)
+	if err != nil {
+		return nil, err
+	}
+	p := &Proc{
+		Dll:  d,
+		Name: name,
+		addr: addr,
+	}
+	d.procs[name] = p
+	return p, nil
+}
+
+func (d *DLL) MustFindProc(name string) *Proc {
+	p, err := d.GetProc(name)
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
+func (p *Proc) Call(args ...uintptr) (r1 uintptr, r2 uintptr, err syscall.Errno) {
+	return syscall.SyscallN(p.addr, args...)
+}
+
+func (p *Proc) Addr() uintptr {
+	return p.addr
 }
 
 var Dll *DLL
@@ -41,7 +101,7 @@ func LoadLibrary(libfile string) (*DLL, error) {
 	if libfile != "" {
 		// 尝试直接加载 DLL
 		if h, err := loadLibrary(libfile); err == nil {
-			Dll = &DLL{Name: libfile, Handle: h}
+			Dll = newDll(libfile, h)
 			return Dll, nil
 		}
 	}
@@ -62,14 +122,16 @@ func loadEmbedLibrary() (*DLL, error) {
 
 	h, err := loadLibrary(targetFile)
 	if err != nil {
-		Dll.Release()
+		_ = Dll.Release()
 		Dll = nil
 		return nil, err
 	}
 
-	go extractPluginsDLL()
+	go func() {
+		_ = extractPluginsDLL()
+	}()
 
-	Dll = &DLL{Name: targetFile, Handle: h}
+	Dll = newDll(targetFile, h)
 	return Dll, nil
 }
 
